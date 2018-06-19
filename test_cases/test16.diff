@@ -1,0 +1,26 @@
+lib
+	func "Length" s
+		stmt compound
+			stmt vardefs
+				vars
+					var result
+						expr -u
+							op
+								expr intliteral 16
+			stmt while
+				cond
+					expr *
+						op
+							expr post++
+								op
+									expr id s
+				body
+					stmt compound
+						stmt expression
+							expr
+								expr ++pre
+									op
+										expr id result
+			stmt return
+				expr
+					expr id result

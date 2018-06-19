@@ -1,0 +1,9 @@
+lib
+	func "test" a
+		stmt return
+			expr
+				expr []
+					indexed
+						expr id a
+					index
+						expr id b

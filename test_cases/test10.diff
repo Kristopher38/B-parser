@@ -1,0 +1,43 @@
+lib
+	func "kek" a b
+		stmt compound
+			stmt return
+				expr
+					expr ||
+						op1
+							expr &&
+								op1
+									expr +
+										op1
+											expr -u
+												op
+													expr intliteral 4
+										op2
+											expr fcall
+												name
+													expr ()
+														expr +
+															op1
+																expr id b
+															op2
+																expr id a
+												params
+													expr +
+														op1
+															expr intliteral 6
+														op2
+															expr id c
+								op2
+									expr intliteral 3
+						op2
+							expr +
+								op1
+									expr -u
+										op
+											expr intliteral 5
+								op2
+									expr -u
+										op
+											expr !
+												op
+													expr intliteral 8

@@ -1,0 +1,10 @@
+lib
+	func "kek" a b
+		stmt compound
+			stmt return
+				expr
+					expr -u
+						op
+							expr !
+								op
+									expr intliteral 8

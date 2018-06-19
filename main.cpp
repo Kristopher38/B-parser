@@ -9,16 +9,27 @@
 
 using namespace std;
 
-int main()
+int main(int argc, char* argv[])
 {
-    ifstream src("first_test.txt");
+    bool testcase = true;
+    std::string src_filename = "first_test.txt";
+    if (argc > 1)
+    {
+        if (std::string(argv[1]) == "--testcase")
+        {
+            testcase = true;
+            src_filename = std::string(argv[2]);
+        }
+    }
+
+    ifstream src(src_filename);
 
     if (src.good())
     {
         std::string cont;
         std::stringstream buffer;
         buffer<<src.rdbuf();
-        cont = buffer.str();
+        cont = buffer.str()+"\n";
         src.close();
         Lexer lexer(&cont);
         Parser parser;
@@ -29,22 +40,23 @@ int main()
         do
         {
             t = lexer.next();
-            cout<<"Line "<<t.line_num<<": "<<token_debug_names.at(t.type);
-            if (t.type == TOKEN_IDENTIFIER || t.type == TOKEN_STR_LITERAL)
-                cout<<": "<<*t.str_val<<endl;
-            if (t.type == TOKEN_INT_LITERAL)
-                cout<<": "<<*t.int_val<<endl;
-            if (t.type != TOKEN_IDENTIFIER && t.type != TOKEN_STR_LITERAL && t.type != TOKEN_INT_LITERAL)
-                cout<<endl;
-
+            if (!testcase)
+            {
+                cout<<"Line "<<t.line_num<<": "<<token_debug_names.at(t.type);
+                if (t.type == TOKEN_IDENTIFIER || t.type == TOKEN_STR_LITERAL)
+                    cout<<": "<<*t.str_val<<endl;
+                if (t.type == TOKEN_INT_LITERAL)
+                    cout<<": "<<*t.int_val<<endl;
+                if (t.type != TOKEN_IDENTIFIER && t.type != TOKEN_STR_LITERAL && t.type != TOKEN_INT_LITERAL)
+                    cout<<endl;
+            }
             parser.feed(t);
 
         } while (t.type != TOKEN_EOF);
 
         Library kek = parser.finish();
 
-        system("pause");
-        DebugPrinter::print_debug_library(kek);
+        DebugPrinter::print_debug_library(kek, testcase, 0);
     }
     return 0;
 }

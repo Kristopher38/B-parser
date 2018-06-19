@@ -1,0 +1,17 @@
+lib
+	func "LastCharN" s n
+		stmt return
+			expr
+				expr fcall
+					name
+						expr id s
+					params
+						expr &&
+							op1
+								expr id c
+							op2
+								expr -
+									op2
+										expr id a
+									op1
+										expr id b

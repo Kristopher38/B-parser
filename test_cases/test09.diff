@@ -1,0 +1,44 @@
+lib
+	func "kek" a b
+		stmt compound
+			stmt return
+				expr
+					expr =
+						op1
+							expr ||
+								op1
+									expr -
+										op1
+											expr id a
+										op2
+											expr id b
+								op2
+									expr &&
+										op1
+											expr id c
+										op2
+											expr -u
+												op
+													expr id d
+						op2
+							expr ||
+								op1
+									expr ||
+										op1
+											expr id e
+										op2
+											expr &&
+												op1
+													expr id f
+												op2
+													expr -
+														op1
+															expr +
+																op1
+																	expr id g
+																op2
+																	expr id h
+														op2
+															expr id i
+								op2
+									expr id j

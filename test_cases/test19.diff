@@ -1,0 +1,61 @@
+lib
+	func "AkiEnd" s
+		stmt return
+			expr
+				expr &&
+					op1
+						expr &&
+							op1
+								expr fcall
+									name
+										expr id find
+									params
+										expr ,
+											op1
+												expr fcall
+													name
+														expr id LastCharN
+													params
+														expr ,
+															op1
+																expr id s
+															op2
+																expr intliteral 2
+											op2
+												expr id kK return
+							op2
+								expr fcall
+									name
+										expr id find
+									params
+										expr ,
+											op1
+												expr fcall
+													name
+														expr id LastCharN
+													params
+														expr ,
+															op1
+																expr id s
+															op2
+																expr intliteral 1
+											op2
+												expr id iI
+					op2
+						expr fcall
+							name
+								expr id find
+							params
+								expr ,
+									op1
+										expr fcall
+											name
+												expr id LastCharN
+											params
+												expr ,
+													op1
+														expr id s
+													op2
+														expr intliteral 3
+									op2
+										expr id aAäÄ

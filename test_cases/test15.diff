@@ -1,0 +1,31 @@
+lib
+	func "find" c s
+		stmt compound
+			stmt return
+				expr
+					expr ?:
+						cond
+							expr *
+								op
+									expr id s
+						trueexpr
+							expr ?:
+								cond
+									expr ==
+										op1
+											expr *
+												op
+													expr id s
+										op2
+											expr id c
+								trueexpr
+									expr intliteral 1
+								falseexpr
+									expr +
+										op1
+											expr id s
+										op2
+											expr intliteral 1
+							
+						falseexpr
+							expr intliteral 0

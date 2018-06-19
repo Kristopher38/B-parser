@@ -1,0 +1,25 @@
+lib
+	func "strcmp" string1 string2
+		stmt compound
+			stmt vardefs
+			
+			stmt while
+				cond
+					expr !
+						op
+							expr id "done"
+				body
+					stmt cmpnd
+						stmt vars
+						
+						stmt expr
+							expr =
+								op1
+									expr id "result"
+								op2
+									expr +
+										op1
+											expr id "a"
+										op2
+											expr id "b"
+							
