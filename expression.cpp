@@ -52,13 +52,13 @@ std::map<EXPR_TYPE, EXPR_OPCOUNT> op_opcount = {{EXPR_TYPE::BIN_COMMA, EXPR_OPCO
                                                 {EXPR_TYPE::UNARY_PREDECR, EXPR_OPCOUNT::UNARY},
                                                 {EXPR_TYPE::UNARY_POSTINCR, EXPR_OPCOUNT::UNARY},
                                                 {EXPR_TYPE::UNARY_POSTDECR, EXPR_OPCOUNT::UNARY},
-                                                {EXPR_TYPE::INT_LITERAL, EXPR_OPCOUNT::OTHER},
-                                                {EXPR_TYPE::STR_LITERAL, EXPR_OPCOUNT::OTHER},
-                                                {EXPR_TYPE::IDENTIFIER, EXPR_OPCOUNT::OTHER},
-                                                {EXPR_TYPE::PARENTHESIS, EXPR_OPCOUNT::OTHER},
-                                                {EXPR_TYPE::INDEXING, EXPR_OPCOUNT::BINARY},
-                                                {EXPR_TYPE::FUNC_CALL, EXPR_OPCOUNT::OTHER},
-                                                {EXPR_TYPE::NONE, EXPR_OPCOUNT::OTHER}};
+                                                {EXPR_TYPE::INT_LITERAL, EXPR_OPCOUNT::SINGLETOKEN},
+                                                {EXPR_TYPE::STR_LITERAL, EXPR_OPCOUNT::SINGLETOKEN},
+                                                {EXPR_TYPE::IDENTIFIER, EXPR_OPCOUNT::SINGLETOKEN},
+                                                {EXPR_TYPE::PARENTHESIS, EXPR_OPCOUNT::GROUPING},
+                                                {EXPR_TYPE::INDEXING, EXPR_OPCOUNT::GROUPING},
+                                                {EXPR_TYPE::FUNC_CALL, EXPR_OPCOUNT::GROUPING},
+                                                {EXPR_TYPE::NONE, EXPR_OPCOUNT::SINGLETOKEN}};
 
 Expression::Expression() : type(EXPR_TYPE::NONE), gentype(op_opcount[type]) {}
 

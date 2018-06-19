@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <windows.h>
+#include <stack>
 
 #include "token.h"
 #include "expression.h"
@@ -60,7 +61,42 @@ std::map<STATEMENT_TYPE, std::string> stmt_debug_names =
 class DebugPrinter
 {
 public:
+    static void print_stack(std::stack<ParserToken> stack)
+    {
+        std::stack<ParserToken> rstack;
+        while (!stack.empty())
+        {
+            rstack.push(stack.top());
+            stack.pop();
+        }
 
+        int i = 0;
+        while (!rstack.empty())
+        {
+            cout<<"["<<i<<"]:"<<endl;
+            i++;
+            ParserToken item = rstack.top();
+            rstack.pop();
+            switch (item.gettag())
+            {
+                case PARSERTOKEN::LIBRARY:
+                    print_debug_library(*item.library);
+                    break;
+                case PARSERTOKEN::FUNCTION:
+                    print_debug_function(*item.function);
+                    break;
+                case PARSERTOKEN::STATEMENT:
+                    print_debug_statement(*item.statement);
+                    break;
+                case PARSERTOKEN::EXPRESSION:
+                    print_debug_expr(*item.expression);
+                    break;
+                case PARSERTOKEN::TOKEN:
+                    print_debug_token(*item.token);
+                    break;
+            }
+        }
+    }
 
     static void print_debug_library(Library library, int ident = 0)
     {
@@ -390,13 +426,13 @@ public:
         switch (token.type)
         {
             case TOKEN_IDENTIFIER:
-                cout<<token.str_val;
+                cout<<*token.str_val;
                 break;
             case TOKEN_STR_LITERAL:
-                cout<<"\""<<token.str_val<<"\"";
+                cout<<"\""<<*token.str_val<<"\"";
                 break;
             case TOKEN_INT_LITERAL:
-                cout<<token.int_val;
+                cout<<*token.int_val;
                 break;
             default:
                 break;

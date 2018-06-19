@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <windows.h>
 #include "lexer.h"
 #include "token.h"
 #include "parser.h"
@@ -42,6 +43,7 @@ int main()
 
         Library kek = parser.finish();
 
+        system("pause");
         DebugPrinter::print_debug_library(kek);
     }
     return 0;

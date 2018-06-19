@@ -16,6 +16,8 @@
 #include "identifier.h"
 #include "parsertoken.h"
 
+#include "debugprinter.h"
+
 class Parser
 {
     std::stack<ParserToken> parser_stack;
@@ -222,25 +224,34 @@ class Parser
     {
         // making operator and operand list phase
         std::list<Expression> parents_stack;
-        if (to_transform.expressions)
+
+        // if we're operating on a single token just return it unchanged
+        if (op_opcount[to_transform.type] == EXPR_OPCOUNT::SINGLETOKEN)
+            return to_transform;
+
+        // if we have a grouping expression we need to make sure expressions
+        // inside it are properly ordered by applying rpn_expr on them
+        else if (op_opcount[to_transform.type] == EXPR_OPCOUNT::GROUPING)
         {
-            if (to_transform.type != EXPR_TYPE::PARENTHESIS)
-                parents_stack.push_back(Expression(EXPR_TYPE::PARENTHESIS, to_transform));
-            if (to_transform.type == EXPR_TYPE::INDEXING)
-                to_transform.expressions->back() = Expression(EXPR_TYPE::PARENTHESIS, to_transform.expressions->back());
+            for (auto it = to_transform.expressions->begin(); it != to_transform.expressions->end(); ++it)
+                *it = rpn_expr(*it);
+            return to_transform;    // after applying precedence rules to expressions inside return grouping expression
+        }
+
+
+
+        // if it's not a grouping or single token expression, it's an
+        // expression that needs to be ordered by applying precedence rules
+        else
+        {
             parents_stack.push_back(to_transform);
             std::list<Expression>::iterator expr_end = to_transform.expressions->end();
             std::list<Expression>::iterator it = to_transform.expressions->begin();
             while (it != expr_end)
             {
-                if (it->type == EXPR_TYPE::INT_LITERAL ||
-                        it->type == EXPR_TYPE::STR_LITERAL ||
-                        it->type == EXPR_TYPE::IDENTIFIER ||
-                        it->type == EXPR_TYPE::PARENTHESIS)
-                {
-                    Expression exp = *it;
+                if (op_opcount[it->type] == EXPR_OPCOUNT::SINGLETOKEN ||
+                    op_opcount[it->type] == EXPR_OPCOUNT::GROUPING)
                     ++it;
-                }
                 else
                 {
                     parents_stack.push_back(*it);
@@ -249,13 +260,13 @@ class Parser
                 }
             }
         }
-        else
-            return to_transform;
 
         // rpn-ordering phase
         std::stack<Expression> operator_stack;
         std::stack<Expression> output_stack;
         unsigned insert_offset = 0;
+
+        operator_stack.push(parents_stack.front());    // push the operator at the top of the tree in an expression
         while (!parents_stack.empty())
         {
             Expression current_expr = parents_stack.front();
@@ -263,7 +274,8 @@ class Parser
             for (std::list<Expression>::iterator current_subexpr = current_expr.expressions->begin(); current_subexpr != current_expr.expressions->end(); ++current_subexpr)
             {
                 //output_stack.push(*current_subexpr);
-                if (op_opcount[current_subexpr->type] == EXPR_OPCOUNT::OTHER)
+                if (op_opcount[current_subexpr->type] == EXPR_OPCOUNT::SINGLETOKEN ||
+                    op_opcount[current_subexpr->type] == EXPR_OPCOUNT::GROUPING)
                 {
                     std::stack<Expression> temp;
                     if (insert_offset)
@@ -301,6 +313,7 @@ class Parser
                 }
             }
         }
+
         while (!operator_stack.empty())
         {
             Expression test = operator_stack.top();
@@ -322,7 +335,8 @@ class Parser
             Expression token = rpn_stack.top();
             rpn_stack.pop();
 
-            if (op_opcount[token.type] != EXPR_OPCOUNT::OTHER)
+            if (op_opcount[token.type] != EXPR_OPCOUNT::SINGLETOKEN &&
+                op_opcount[token.type] != EXPR_OPCOUNT::GROUPING)
             {
                 Expression operand1;
                 Expression operand2;
@@ -350,7 +364,8 @@ class Parser
                         result_stack.pop();
                         result_stack.push(Expression(token.type, operand1, operand2, operand3));
                         break;
-                    case EXPR_OPCOUNT::OTHER:
+                    case EXPR_OPCOUNT::GROUPING:
+                    case EXPR_OPCOUNT::SINGLETOKEN:
                         throw std::logic_error("Attempted trying to treat non-operator as an operator while transforming syntax tree with precedence rules");
                 }
             }
@@ -358,11 +373,7 @@ class Parser
                 result_stack.push(token);
         }
 
-        if (to_transform.type == EXPR_TYPE::INDEXING)
-            result_stack.top().expressions->front() = result_stack.top().expressions->front().expressions->back();
-        if (to_transform.type == EXPR_TYPE::PARENTHESIS)
-            return Expression(EXPR_TYPE::PARENTHESIS, result_stack.top());
-        else return result_stack.top();
+        return result_stack.top();
     }
 
 public:
@@ -420,6 +431,7 @@ public:
                 case ACTION::REDUCE:
                     if (action.next_goal.goal != GOAL::NONE)
                     {
+                        //DebugPrinter::print_stack(parser_stack);
                         std::vector<ParserToken> to_reduce;
 
                         for (int i = reduce_stack.top(); i > 0; --i)
@@ -443,10 +455,10 @@ public:
                             Expression temp = *parser_stack.top().statement->expr;
                             *parser_stack.top().statement->expr = rpn_expr(temp);
                         }
-                        if (action.next_goal.goal == GOAL::EXPRESSION && action.next_goal.expr == EXPR_TYPE::PARENTHESIS)
+                        if (action.next_goal.goal == GOAL::EXPRESSION && op_opcount[action.next_goal.expr] == EXPR_OPCOUNT::GROUPING)
                         {
                             Expression temp = *parser_stack.top().expression;
-                            parser_stack.push(ParserToken(rpn_expr(temp)));
+                            *parser_stack.top().expression = rpn_expr(temp);
                         }
 
                         if (action.return_state < 0)
