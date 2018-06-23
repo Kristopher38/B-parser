@@ -18,9 +18,9 @@ lib
 													expr ()
 														expr +
 															op1
-																expr id b
-															op2
 																expr id a
+															op2
+																expr id b
 												params
 													expr +
 														op1

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DIFF_OPTIONS="--context=3 --ignore-trailing-space --ignore-blank-lines"
+DIFF_OPTIONS="--context=10 --ignore-trailing-space --ignore-blank-lines"
 NPP_PATH="/c/Program Files/Notepad++/notepad++.exe"
 BUILD_NAME="Debug"
 

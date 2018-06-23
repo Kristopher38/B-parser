@@ -220,6 +220,27 @@ class Parser
         }
     }
 
+    std::list<Expression> rpn_traverse_tree(Expression to_traverse)
+    {
+        std::list<Expression> parents_list;
+
+        if (op_opcount[to_traverse.type] != EXPR_OPCOUNT::SINGLETOKEN &&
+            op_opcount[to_traverse.type] != EXPR_OPCOUNT::GROUPING)
+        {
+            parents_list.push_back(to_traverse);
+            for (auto it = to_traverse.expressions->begin(); it != to_traverse.expressions->end(); ++it)
+            {
+                if (op_opcount[to_traverse.type] == EXPR_OPCOUNT::TERNARY && it == ++to_traverse.expressions->begin())
+                {
+                    *it = rpn_expr(Expression(EXPR_TYPE::PARENTHESIS, *it));
+                }
+                std::list<Expression> traversed = rpn_traverse_tree(*it);
+                parents_list.insert(parents_list.end(), traversed.begin(), traversed.end());
+            }
+        }
+        return parents_list;
+    }
+
     Expression rpn_expr(Expression to_transform)
     {
         // making operator and operand list phase
@@ -238,32 +259,15 @@ class Parser
             return to_transform;    // after applying precedence rules to expressions inside return grouping expression
         }
 
-
-
         // if it's not a grouping or single token expression, it's an
         // expression that needs to be ordered by applying precedence rules
         else
-        {
-            parents_stack.push_back(to_transform);
-            std::list<Expression>::iterator expr_end = to_transform.expressions->end();
-            std::list<Expression>::iterator it = to_transform.expressions->begin();
-            while (it != expr_end)
-            {
-                if (op_opcount[it->type] == EXPR_OPCOUNT::SINGLETOKEN ||
-                    op_opcount[it->type] == EXPR_OPCOUNT::GROUPING)
-                    ++it;
-                else
-                {
-                    parents_stack.push_back(*it);
-                    expr_end = it->expressions->end();
-                    it = it->expressions->begin();
-                }
-            }
-        }
+            parents_stack = rpn_traverse_tree(to_transform);
 
         // rpn-ordering phase
         std::stack<Expression> operator_stack;
         std::stack<Expression> output_stack;
+        std::stack<Expression> ternary_stack;
         unsigned insert_offset = 0;
 
         operator_stack.push(parents_stack.front());    // push the operator at the top of the tree in an expression
@@ -349,13 +353,14 @@ class Parser
                         result_stack.push(Expression(token.type, operand1));
                         break;
                     case EXPR_OPCOUNT::BINARY:
-                        operand1 = result_stack.top();
-                        result_stack.pop();
                         operand2 = result_stack.top();
+                        result_stack.pop();
+                        operand1 = result_stack.top();
                         result_stack.pop();
                         result_stack.push(Expression(token.type, operand1, operand2));
                         break;
                     case EXPR_OPCOUNT::TERNARY:
+                    {
                         operand1 = result_stack.top();
                         result_stack.pop();
                         operand2 = result_stack.top();
@@ -364,6 +369,7 @@ class Parser
                         result_stack.pop();
                         result_stack.push(Expression(token.type, operand1, operand2, operand3));
                         break;
+                    }
                     case EXPR_OPCOUNT::GROUPING:
                     case EXPR_OPCOUNT::SINGLETOKEN:
                         throw std::logic_error("Attempted trying to treat non-operator as an operator while transforming syntax tree with precedence rules");
@@ -431,7 +437,7 @@ public:
                 case ACTION::REDUCE:
                     if (action.next_goal.goal != GOAL::NONE)
                     {
-                        //DebugPrinter::print_stack(parser_stack);
+                        //DebugPrinter::print_stack(parser_stack, true);
                         std::vector<ParserToken> to_reduce;
 
                         for (int i = reduce_stack.top(); i > 0; --i)

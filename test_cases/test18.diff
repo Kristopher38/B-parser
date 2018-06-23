@@ -11,7 +11,7 @@ lib
 								expr id c
 							op2
 								expr -
-									op2
-										expr id a
 									op1
+										expr id a
+									op2
 										expr id b

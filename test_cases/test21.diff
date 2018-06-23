@@ -7,7 +7,7 @@ lib
 						cond
 							expr *
 								op
-									expr id s
+									expr id a
 						trueexpr
 							expr ()
 								expr ?:
@@ -16,18 +16,24 @@ lib
 											op1
 												expr *
 													op
-														expr id s
+														expr id b
 											op2
 												expr id c
 									trueexpr
 										expr ()
-											expr intliteral 1
+											expr ?:
+												cond
+													expr id d
+												trueexpr
+													expr ()
+														expr +
+															op1
+																expr id e
+															op2
+																expr intliteral 1
+												falseexpr
+													expr id f
 									falseexpr
-										expr +
-											op1
-												expr id s
-											op2
-												expr intliteral 1
-								
+										expr id g
 						falseexpr
 							expr intliteral 0

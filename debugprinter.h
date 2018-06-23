@@ -264,11 +264,11 @@ public:
                 cout<<tabs(compact, ident+1)<<(compact ? "op1" : "operand 1: ")<<endl;
 
                 SHORT last_y = getxy().Y;
-                print_debug_expr(expr.expressions->back(), compact, ident+2, true);
+                print_debug_expr(expr.expressions->front(), compact, ident+2, true);
                 print_vline(compact, ident, last_y);
 
                 cout<<tabs(compact, ident+1, true)<<(compact ? "op2" : "operand 2: ")<<endl;
-                print_debug_expr(expr.expressions->front(), compact, ident+2, true);
+                print_debug_expr(expr.expressions->back(), compact, ident+2, true);
                 break;
             }
             case EXPR_TYPE::UNARY_AMP:
