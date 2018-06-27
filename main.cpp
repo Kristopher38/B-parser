@@ -11,7 +11,7 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
-    bool testcase = true;
+    bool testcase = false;
     std::string src_filename = "first_test.txt";
     if (argc > 1)
     {

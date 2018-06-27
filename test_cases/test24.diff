@@ -16,7 +16,7 @@ lib
 											params
 												expr id s
 												expr intliteral 2
-										expr strliteral "kK return"
+										expr strliteral "kK"
 							op2
 								expr fcall
 									name

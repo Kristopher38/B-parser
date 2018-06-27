@@ -259,7 +259,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(27, TOKEN_SEMICOLON),
-        Action(ACTION::SHIFT, 31)
+        Action(ACTION::JUMP, 31)
     },
     {
         Current(27, TOKEN_COMMA),
@@ -275,7 +275,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(29),
-        Action(ACTION::CALL_NONTERM, 11, 30)
+        Action(ACTION::CALL_NONTERM, 97, 30)
     },
     {
         Current(30, TOKEN_COMMA),
@@ -451,7 +451,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(47),
-        Action(ACTION::CALL_NONTERM, 11, 48)
+        Action(ACTION::CALL_NONTERM, 97, 48)
     },
     {
         Current(48, TOKEN_COMMA),
@@ -687,6 +687,375 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(78),
+        Action(ACTION::REDUCE, Goal(GOAL::NONE))
+    },
+
+    {
+        Current(97, TOKEN_INT_LITERAL),
+        Action(ACTION::SHIFT, 100)
+    },
+    {
+        Current(97, TOKEN_STR_LITERAL),
+        Action(ACTION::SHIFT, 101)
+    },
+    {
+        Current(97, TOKEN_IDENTIFIER),
+        Action(ACTION::SHIFT, 102)
+    },
+    {
+        Current(97, TOKEN_PARENTHESIS_OPEN),
+        Action(ACTION::SHIFT, 103)
+    },
+    {
+        Current(97),
+        Action(ACTION::CALL_NONTERM, 97, 98)
+    },
+    {
+        Current(97, TOKEN_AMP),
+        Action(ACTION::SHIFT, 131)
+    },
+    {
+        Current(97, TOKEN_STAR),
+        Action(ACTION::SHIFT, 132)
+    },
+    {
+        Current(97, TOKEN_MINUS),
+        Action(ACTION::SHIFT, 133)
+    },
+    {
+        Current(97, TOKEN_NEGATE),
+        Action(ACTION::SHIFT, 134)
+    },
+    {
+        Current(97, TOKEN_INCREMENT),
+        Action(ACTION::SHIFT, 135)
+    },
+    {
+        Current(97, TOKEN_DECREMENT),
+        Action(ACTION::SHIFT, 136)
+    },
+    {
+        Current(100),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::INT_LITERAL), 99)
+    },
+    {
+        Current(101),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::STR_LITERAL), 99)
+    },
+    {
+        Current(102),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::IDENTIFIER), 99)
+    },
+    {
+        Current(103),
+        Action(ACTION::CALL_NONTERM, 11, 104)
+    },
+    {
+        Current(105),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::PARENTHESIS), 99)
+    },
+    {
+        Current(98, TOKEN_SQBRACKET_OPEN),
+        Action(ACTION::SHIFT, 106)
+    },
+    {
+        Current(98, TOKEN_PARENTHESIS_OPEN),
+        Action(ACTION::SHIFT, 109)
+    },
+    {
+        Current(98, TOKEN_EQUALS),
+        Action(ACTION::SHIFT, 113)
+    },
+    {
+        Current(98, TOKEN_PLUS),
+        Action(ACTION::SHIFT, 114)
+    },
+    {
+        Current(98, TOKEN_MINUS),
+        Action(ACTION::SHIFT, 115)
+    },
+    {
+        Current(98, TOKEN_PLUSEQUALS),
+        Action(ACTION::SHIFT, 116)
+    },
+    {
+        Current(98, TOKEN_MINUSEQUALS),
+        Action(ACTION::SHIFT, 117)
+    },
+    {
+        Current(98, TOKEN_OR),
+        Action(ACTION::SHIFT, 118)
+    },
+    {
+        Current(98, TOKEN_AND),
+        Action(ACTION::SHIFT, 119)
+    },
+    {
+        Current(98, TOKEN_COMPARE),
+        Action(ACTION::SHIFT, 120)
+    },
+    {
+        Current(98, TOKEN_NEGATEEQUALS),
+        Action(ACTION::SHIFT, 121)
+    },
+    {
+        Current(98, TOKEN_INCREMENT),
+        Action(ACTION::SHIFT, 143)
+    },
+    {
+        Current(98, TOKEN_DECREMENT),
+        Action(ACTION::SHIFT, 144)
+    },
+    {
+        Current(98, TOKEN_QUESTIONMARK),
+        Action(ACTION::SHIFT, 145)
+    },
+    {
+        Current(98),
+        Action(ACTION::REDUCE, Goal(GOAL::NONE))
+    },
+    {
+        Current(106),
+        Action(ACTION::CALL_NONTERM, 11, 107)
+    },
+    {
+        Current(107, TOKEN_SQBRACKET_CLOSE),
+        Action(ACTION::SHIFT, 108)
+    },
+    {
+        Current(108),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::INDEXING), 99)
+    },
+    {
+        Current(109, TOKEN_PARENTHESIS_CLOSE),
+        Action(ACTION::SHIFT, 112)
+    },
+    {
+        Current(109),
+        Action(ACTION::CALL_NONTERM, 97, 110)
+    },
+    {
+        Current(110, TOKEN_COMMA),
+        Action(ACTION::SHIFT, 111)
+    },
+    {
+        Current(110, TOKEN_PARENTHESIS_CLOSE),
+        Action(ACTION::SHIFT, 112)
+    },
+    {
+        Current(111),
+        Action(ACTION::CALL_NONTERM, 97, 110)
+    },
+    {
+        Current(112),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::FUNC_CALL), 99)
+    },
+    {
+        Current(113),
+        Action(ACTION::CALL_NONTERM, 97, 122)
+    },
+    {
+        Current(114),
+        Action(ACTION::CALL_NONTERM, 97, 123)
+    },
+    {
+        Current(115),
+        Action(ACTION::CALL_NONTERM, 97, 124)
+    },
+    {
+        Current(116),
+        Action(ACTION::CALL_NONTERM, 97, 125)
+    },
+    {
+        Current(117),
+        Action(ACTION::CALL_NONTERM, 97, 126)
+    },
+    {
+        Current(118),
+        Action(ACTION::CALL_NONTERM, 97, 127)
+    },
+    {
+        Current(119),
+        Action(ACTION::CALL_NONTERM, 97, 128)
+    },
+    {
+        Current(120),
+        Action(ACTION::CALL_NONTERM, 97, 129)
+    },
+    {
+        Current(121),
+        Action(ACTION::CALL_NONTERM, 97, 130)
+    },
+    {
+        Current(122),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::BIN_EQUALS), 99)
+    },
+    {
+        Current(123),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::BIN_PLUS), 99)
+    },
+    {
+        Current(124),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::BIN_MINUS), 99)
+    },
+    {
+        Current(125),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::BIN_PLUSEQUALS), 99)
+    },
+    {
+        Current(126),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::BIN_MINUSEQUALS), 99)
+    },
+    {
+        Current(127),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::BIN_OR), 99)
+    },
+    {
+        Current(128),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::BIN_AND), 99)
+    },
+    {
+        Current(129),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::BIN_COMPARE), 99)
+    },
+    {
+        Current(130),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::BIN_NEGATEEQUALS), 99)
+    },
+    {
+        Current(131),
+        Action(ACTION::CALL_NONTERM, 97, 137)
+    },
+    {
+        Current(132),
+        Action(ACTION::CALL_NONTERM, 97, 138)
+    },
+    {
+        Current(133),
+        Action(ACTION::CALL_NONTERM, 97, 139)
+    },
+    {
+        Current(134),
+        Action(ACTION::CALL_NONTERM, 97, 140)
+    },
+    {
+        Current(135),
+        Action(ACTION::CALL_NONTERM, 97, 141)
+    },
+    {
+        Current(136),
+        Action(ACTION::CALL_NONTERM, 97, 142)
+    },
+    {
+        Current(137),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::UNARY_AMP), 99)
+    },
+    {
+        Current(138),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::UNARY_STAR), 99)
+    },
+    {
+        Current(139),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::UNARY_MINUS), 99)
+    },
+    {
+        Current(140),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::UNARY_NEGATE), 99)
+    },
+    {
+        Current(141),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::UNARY_PREINCR), 99)
+    },
+    {
+        Current(142),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::UNARY_PREDECR), 99)
+    },
+    {
+        Current(143),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::UNARY_POSTINCR), 99)
+    },
+    {
+        Current(144),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::UNARY_POSTDECR), 99)
+    },
+    {
+        Current(145),
+        Action(ACTION::CALL_NONTERM, 97, 146)
+    },
+    {
+        Current(146, TOKEN_COLON),
+        Action(ACTION::SHIFT, 147)
+    },
+    {
+        Current(147),
+        Action(ACTION::CALL_NONTERM, 97, 148)
+    },
+    {
+        Current(148),
+        Action(ACTION::REDUCE, Goal(EXPR_TYPE::TERNARY), 99)
+    },
+    {
+        Current(104, TOKEN_PARENTHESIS_CLOSE),
+        Action(ACTION::SHIFT, 105)
+    },
+    {
+        Current(99, TOKEN_SQBRACKET_OPEN),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_PARENTHESIS_OPEN),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_EQUALS),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_PLUS),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_MINUS),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_PLUSEQUALS),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_MINUSEQUALS),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_OR),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_AND),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_COMPARE),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_NEGATEEQUALS),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_INCREMENT),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_DECREMENT),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99, TOKEN_QUESTIONMARK),
+        Action(ACTION::CALL_NONTERM_REC, 98, 99)
+    },
+    {
+        Current(99),
         Action(ACTION::REDUCE, Goal(GOAL::NONE))
     }
 };

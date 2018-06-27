@@ -84,7 +84,7 @@ Expression::Expression(EXPR_TYPE _type, std::string _str_val)
         throw std::logic_error("Wrong expression type supplied with string value");
     else
     {
-        type = EXPR_TYPE::IDENTIFIER;
+        type = _type;
         gentype = op_opcount[type];
         str_val = std::make_shared<std::string>(_str_val);
     }
@@ -109,15 +109,13 @@ Expression::Expression(EXPR_TYPE _type, Expression _func_name, std::list<Express
 // Parenthesis or unary expression
 Expression::Expression(EXPR_TYPE _type, Expression _expr)
 {
-    if (_type != EXPR_TYPE::PARENTHESIS &&
-        _type != EXPR_TYPE::UNARY_AMP &&
-        _type != EXPR_TYPE::UNARY_STAR &&
-        _type != EXPR_TYPE::UNARY_MINUS &&
-        _type != EXPR_TYPE::UNARY_NEGATE &&
-        _type != EXPR_TYPE::UNARY_PREINCR &&
-        _type != EXPR_TYPE::UNARY_PREDECR &&
-        _type != EXPR_TYPE::UNARY_POSTINCR &&
-        _type != EXPR_TYPE::UNARY_POSTDECR)
+    init(_type, _expr);
+}
+
+void Expression::init(EXPR_TYPE _type, Expression _expr)
+{
+    if (op_opcount[_type] != EXPR_OPCOUNT::UNARY &&
+        _type != EXPR_TYPE::PARENTHESIS)
             throw std::logic_error("Wrong expression type supplied with only one expression argument (parenthesis or unary expression)");
     else
     {
@@ -131,17 +129,13 @@ Expression::Expression(EXPR_TYPE _type, Expression _expr)
 // Indexing or binary expression
 Expression::Expression(EXPR_TYPE _type, Expression _expr1, Expression _expr2)
 {
-    if (_type != EXPR_TYPE::INDEXING &&
-        _type != EXPR_TYPE::BIN_EQUALS &&
-        _type != EXPR_TYPE::BIN_PLUS &&
-        _type != EXPR_TYPE::BIN_MINUS &&
-        _type != EXPR_TYPE::BIN_PLUSEQUALS &&
-        _type != EXPR_TYPE::BIN_MINUSEQUALS &&
-        _type != EXPR_TYPE::BIN_OR &&
-        _type != EXPR_TYPE::BIN_AND &&
-        _type != EXPR_TYPE::BIN_COMPARE &&
-        _type != EXPR_TYPE::BIN_NEGATEEQUALS &&
-        _type != EXPR_TYPE::BIN_COMMA)
+    init(_type, _expr1, _expr2);
+}
+
+void Expression::init(EXPR_TYPE _type, Expression _expr1, Expression _expr2)
+{
+    if (op_opcount[_type] != EXPR_OPCOUNT::BINARY &&
+        _type != EXPR_TYPE::INDEXING)
             throw std::logic_error("Wrong expression type supplied with two expression arguments (indexing or binary expression)");
     else
     {
@@ -157,6 +151,11 @@ Expression::Expression(EXPR_TYPE _type, Expression _expr1, Expression _expr2)
 Expression::Expression(Expression _condition_expr, Expression _true_expr, Expression _false_expr) : Expression(EXPR_TYPE::TERNARY, _condition_expr, _true_expr, _false_expr) {}
 Expression::Expression(EXPR_TYPE _type, Expression _condition_expr, Expression _true_expr, Expression _false_expr)
 {
+    init(_type, _condition_expr, _true_expr, _false_expr);
+}
+
+void Expression::init(EXPR_TYPE _type, Expression _condition_expr, Expression _true_expr, Expression _false_expr)
+{
     if (_type != EXPR_TYPE::TERNARY)
         throw std::logic_error("Wrong expression type supplied with three expression arguments (ternary operator expression)");
     else
@@ -167,5 +166,20 @@ Expression::Expression(EXPR_TYPE _type, Expression _condition_expr, Expression _
         expressions->push_back(_condition_expr);
         expressions->push_back(_true_expr);
         expressions->push_back(_false_expr);
+    }
+}
+
+Expression::Expression(EXPR_TYPE _type, std::list<Expression> _operands)
+{
+    switch (_operands.size())
+    {
+        case 1:
+
+        case 2:
+
+        case 3:
+
+        default:
+            throw std::logic_error("Wrong number of expression arguments supplied to unary/binary/ternary expression");
     }
 }

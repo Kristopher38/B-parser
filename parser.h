@@ -39,7 +39,16 @@ class Parser
         }
         catch (const std::exception& e)
         {
-            a = grammar.at(Current(_current_state));
+            try
+            {
+                a = grammar.at(Current(_current_state));
+            }
+            catch (const std::exception& e)
+            {
+                cout<<"STATE MACHINE ERROR"<<endl;
+                cout<<_current_state<<" "<<token_debug_names.at(lookahead_token_type)<<endl;
+                throw e;
+            }
         }
         return a;
     }
@@ -187,6 +196,7 @@ class Parser
                             vars.push_back(Variable(ident, *it->expression));
                         else
                         {
+                            vars.push_back(Variable(ident));
                             --it;
                             continue;
                         }
@@ -267,7 +277,6 @@ class Parser
         // rpn-ordering phase
         std::stack<Expression> operator_stack;
         std::stack<Expression> output_stack;
-        std::stack<Expression> ternary_stack;
         unsigned insert_offset = 0;
 
         operator_stack.push(parents_stack.front());    // push the operator at the top of the tree in an expression
