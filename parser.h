@@ -351,38 +351,13 @@ class Parser
             if (op_opcount[token.type] != EXPR_OPCOUNT::SINGLETOKEN &&
                 op_opcount[token.type] != EXPR_OPCOUNT::GROUPING)
             {
-                Expression operand1;
-                Expression operand2;
-                Expression operand3;
-                switch(op_opcount[token.type])
+                std::vector<Expression> exprs;
+                for (uint8_t i = 0; i < operand_count.at(op_opcount[token.type]); ++i)
                 {
-                    case EXPR_OPCOUNT::UNARY:
-                        operand1 = result_stack.top();
-                        result_stack.pop();
-                        result_stack.push(Expression(token.type, operand1));
-                        break;
-                    case EXPR_OPCOUNT::BINARY:
-                        operand2 = result_stack.top();
-                        result_stack.pop();
-                        operand1 = result_stack.top();
-                        result_stack.pop();
-                        result_stack.push(Expression(token.type, operand1, operand2));
-                        break;
-                    case EXPR_OPCOUNT::TERNARY:
-                    {
-                        operand1 = result_stack.top();
-                        result_stack.pop();
-                        operand2 = result_stack.top();
-                        result_stack.pop();
-                        operand3 = result_stack.top();
-                        result_stack.pop();
-                        result_stack.push(Expression(token.type, operand1, operand2, operand3));
-                        break;
-                    }
-                    case EXPR_OPCOUNT::GROUPING:
-                    case EXPR_OPCOUNT::SINGLETOKEN:
-                        throw std::logic_error("Attempted trying to treat non-operator as an operator while transforming syntax tree with precedence rules");
+                    exprs.push_back(result_stack.top());
+                    result_stack.pop();
                 }
+                result_stack.push(Expression(token.type, exprs));
             }
             else
                 result_stack.push(token);

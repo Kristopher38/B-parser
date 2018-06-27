@@ -288,7 +288,7 @@ public:
                 cout<<tabs(compact, ident+1)<<(compact ? "cond" : "condition: ")<<endl;
 
                 SHORT last_y = getxy().Y;
-                print_debug_expr(*++++expr.expressions->begin(), compact, ident+2, true);
+                print_debug_expr(expr.expressions->front(), compact, ident+2, true);
                 print_vline(compact, ident, last_y);
 
                 cout<<tabs(compact, ident+1)<<(compact ? "trueexpr" : "true expr: ")<<endl;
@@ -298,7 +298,7 @@ public:
                 print_vline(compact, ident, last_y);
 
                 cout<<tabs(compact, ident+1, true)<<(compact ? "falseexpr" : "false expr: ")<<endl;
-                print_debug_expr(expr.expressions->front(), compact, ident+2, true);
+                print_debug_expr(*++++expr.expressions->begin(), compact, ident+2, true);
                 break;
         }
 

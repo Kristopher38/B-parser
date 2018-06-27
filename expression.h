@@ -5,6 +5,7 @@
 #include <list>
 #include <memory>
 #include <map>
+#include <vector>
 
 enum class EXPR_TYPE {NONE, INT_LITERAL, STR_LITERAL, IDENTIFIER, PARENTHESIS, INDEXING, FUNC_CALL,
                     BIN_EQUALS, BIN_PLUS, BIN_MINUS, BIN_PLUSEQUALS, BIN_MINUSEQUALS,
@@ -13,13 +14,14 @@ enum class EXPR_TYPE {NONE, INT_LITERAL, STR_LITERAL, IDENTIFIER, PARENTHESIS, I
                     UNARY_PREDECR, UNARY_POSTINCR, UNARY_POSTDECR,
                     TERNARY};
 
-enum class EXPR_OPCOUNT {UNARY = 1, BINARY = 2, TERNARY = 3, GROUPING = 4, SINGLETOKEN = 5};
+enum class EXPR_OPCOUNT {UNARY, BINARY, TERNARY, GROUPING, SINGLETOKEN};
 
-enum class ASSOC {LEFT = 0, RIGHT = 1};
+enum class ASSOC {LEFT, RIGHT};
 
 extern std::map<EXPR_TYPE, int> op_prec;
 extern std::map<EXPR_TYPE, ASSOC> op_assoc;
 extern std::map<EXPR_TYPE, EXPR_OPCOUNT> op_opcount;
+extern const std::map<EXPR_OPCOUNT, uint8_t> operand_count;
 
 struct Expression
 {
@@ -55,7 +57,7 @@ struct Expression
     void init(EXPR_TYPE _type, Expression _condition_expr, Expression _true_expr, Expression _false_expr);
 
     // all-in-one for unary, binary and ternary expressions
-    Expression(EXPR_TYPE _type, std::list<Expression> _operands);
+    Expression(EXPR_TYPE _type, std::vector<Expression> _operands);
 };
 
 #endif // H_EXPRESSION

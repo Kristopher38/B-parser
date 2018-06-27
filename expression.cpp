@@ -60,6 +60,8 @@ std::map<EXPR_TYPE, EXPR_OPCOUNT> op_opcount = {{EXPR_TYPE::BIN_COMMA, EXPR_OPCO
                                                 {EXPR_TYPE::FUNC_CALL, EXPR_OPCOUNT::GROUPING},
                                                 {EXPR_TYPE::NONE, EXPR_OPCOUNT::SINGLETOKEN}};
 
+const std::map<EXPR_OPCOUNT, uint8_t> operand_count = {{EXPR_OPCOUNT::UNARY, 1}, {EXPR_OPCOUNT::BINARY, 2}, {EXPR_OPCOUNT::TERNARY, 3}};
+
 Expression::Expression() : type(EXPR_TYPE::NONE), gentype(op_opcount[type]) {}
 
 Expression::Expression(EXPR_TYPE _type, int _int_val)
@@ -169,16 +171,30 @@ void Expression::init(EXPR_TYPE _type, Expression _condition_expr, Expression _t
     }
 }
 
-Expression::Expression(EXPR_TYPE _type, std::list<Expression> _operands)
+// Only works for unary, binary and ternary expressions
+Expression::Expression(EXPR_TYPE _type, std::vector<Expression> _operands)
 {
+    try
+    {
+        if (operand_count.at(op_opcount[_type]) != _operands.size())
+            throw std::logic_error("Wrong number of expression arguments supplied to unary/binary/ternary expression constructor");
+    }
+    catch (const std::out_of_range& e)
+    {
+        throw std::logic_error("Wrong expression type supplied to unary/binary/ternary expression constructor");
+    }
+
     switch (_operands.size())
     {
         case 1:
-
+            init(_type, _operands[0]);
+            break;
         case 2:
-
+            init(_type, _operands[1], _operands[0]);
+            break;
         case 3:
-
+            init(_type, _operands[2], _operands[1], _operands[0]);
+            break;
         default:
             throw std::logic_error("Wrong number of expression arguments supplied to unary/binary/ternary expression");
     }
