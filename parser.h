@@ -230,25 +230,96 @@ class Parser
         }
     }
 
+//    std::list<Expression> rpn_traverse_tree(Expression to_traverse)
+//    {
+//        std::list<Expression> parents_list;
+
+//        if (op_opcount[to_traverse.type] != EXPR_OPCOUNT::SINGLETOKEN &&
+//            op_opcount[to_traverse.type] != EXPR_OPCOUNT::GROUPING)
+//        {
+//            parents_list.push_back(to_traverse);
+//            for (auto it = to_traverse.expressions->begin(); it != to_traverse.expressions->end(); ++it)
+//            {
+//                if (op_opcount[to_traverse.type] == EXPR_OPCOUNT::TERNARY && it == ++to_traverse.expressions->begin())
+//                {
+//                    *it = rpn_expr(Expression(EXPR_TYPE::PARENTHESIS, *it));
+//                }
+//                std::list<Expression> traversed = rpn_traverse_tree(*it);
+//                parents_list.insert(parents_list.end(), traversed.begin(), traversed.end());
+//            }
+//        }
+//        return parents_list;
+//    }
+
     std::list<Expression> rpn_traverse_tree(Expression to_traverse)
     {
         std::list<Expression> parents_list;
 
+        // second operand of a ternary expression must be parenthesised before any further processing
+        if (op_opcount[to_traverse.type] == EXPR_OPCOUNT::TERNARY)
+            *++to_traverse.expressions->begin() = rpn_expr(Expression(EXPR_TYPE::PARENTHESIS, *++to_traverse.expressions->begin()));
+
         if (op_opcount[to_traverse.type] != EXPR_OPCOUNT::SINGLETOKEN &&
             op_opcount[to_traverse.type] != EXPR_OPCOUNT::GROUPING)
         {
+            // Usually there is and operand before the operator, however in case of
+            // unary operators, there is no operand before them so we don't want to
+            // include their first child because it's another non-singletoken and
+            // non-grouping expression
+            if (op_opcount[to_traverse.type] != EXPR_OPCOUNT::UNARY)
+                parents_list.push_back(to_traverse.expressions->front());
             parents_list.push_back(to_traverse);
-            for (auto it = to_traverse.expressions->begin(); it != to_traverse.expressions->end(); ++it)
+            for (auto it = op_opcount[to_traverse.type] != EXPR_OPCOUNT::UNARY ? ++to_traverse.expressions->begin() : to_traverse.expressions->begin(); it != to_traverse.expressions->end(); ++it)
             {
-                if (op_opcount[to_traverse.type] == EXPR_OPCOUNT::TERNARY && it == ++to_traverse.expressions->begin())
-                {
-                    *it = rpn_expr(Expression(EXPR_TYPE::PARENTHESIS, *it));
-                }
                 std::list<Expression> traversed = rpn_traverse_tree(*it);
                 parents_list.insert(parents_list.end(), traversed.begin(), traversed.end());
             }
         }
+        else parents_list.push_back(to_traverse);
         return parents_list;
+    }
+
+    Expression rpn_ast(const std::list<Expression>& exprs)
+    {
+        std::stack<Expression> operator_stack;
+        std::stack<Expression> output_stack;
+        for (auto it = exprs.begin(); it != exprs.end(); ++it)
+        {
+            if (op_opcount[it->type] == EXPR_OPCOUNT::SINGLETOKEN ||
+                op_opcount[it->type] == EXPR_OPCOUNT::GROUPING)
+            {
+                output_stack.push(*it);
+            }
+            else
+            {
+                while (!operator_stack.empty() &&
+                       ((op_prec[it->type] < op_prec[operator_stack.top().type]) ||
+                       ((op_prec[it->type] == op_prec[operator_stack.top().type]) && (op_assoc[operator_stack.top().type] == ASSOC::LEFT))))
+                {
+                    std::vector<Expression> constr_exprs;
+                    for (uint8_t i = 0; i < operand_count.at(op_opcount[operator_stack.top().type]); ++i)
+                    {
+                        constr_exprs.push_back(output_stack.top());
+                        output_stack.pop();
+                    }
+                    output_stack.push(Expression(operator_stack.top().type, constr_exprs));
+                    operator_stack.pop();
+                }
+                operator_stack.push(*it);
+            }
+        }
+        while (!operator_stack.empty())
+        {
+            std::vector<Expression> constr_exprs;
+            for (uint8_t i = 0; i < operand_count.at(op_opcount[operator_stack.top().type]); ++i)
+            {
+                constr_exprs.push_back(output_stack.top());
+                output_stack.pop();
+            }
+            output_stack.push(Expression(operator_stack.top().type, constr_exprs));
+            operator_stack.pop();
+        }
+        return output_stack.top();
     }
 
     Expression rpn_expr(Expression to_transform)
@@ -274,96 +345,97 @@ class Parser
         else
             parents_stack = rpn_traverse_tree(to_transform);
 
+        return rpn_ast(parents_stack);
         // rpn-ordering phase
-        std::stack<Expression> operator_stack;
-        std::stack<Expression> output_stack;
-        unsigned insert_offset = 0;
+//        std::stack<Expression> operator_stack;
+//        std::stack<Expression> output_stack;
+//        unsigned insert_offset = 0;
 
-        operator_stack.push(parents_stack.front());    // push the operator at the top of the tree in an expression
-        while (!parents_stack.empty())
-        {
-            Expression current_expr = parents_stack.front();
-            parents_stack.pop_front();
-            for (std::list<Expression>::iterator current_subexpr = current_expr.expressions->begin(); current_subexpr != current_expr.expressions->end(); ++current_subexpr)
-            {
-                //output_stack.push(*current_subexpr);
-                if (op_opcount[current_subexpr->type] == EXPR_OPCOUNT::SINGLETOKEN ||
-                    op_opcount[current_subexpr->type] == EXPR_OPCOUNT::GROUPING)
-                {
-                    std::stack<Expression> temp;
-                    if (insert_offset)
-                    {
-                        while (insert_offset)
-                        {
-                            temp.push(output_stack.top());
-                            output_stack.pop();
-                            insert_offset--;
-                        }
-                        output_stack.push(*current_subexpr);
-                        while (!temp.empty())
-                        {
-                            output_stack.push(temp.top());
-                            temp.pop();
-                        }
-                    }
-                    else
-                        output_stack.push(*current_subexpr);
-                }
-                else
-                {
-                    while (
-                           !operator_stack.empty() &&
-                           ((op_prec[current_subexpr->type] < op_prec[operator_stack.top().type]) ||
-                           ((op_prec[current_subexpr->type] == op_prec[operator_stack.top().type]) && (op_assoc[operator_stack.top().type] == ASSOC::LEFT)))
-                          )
-                    {
-                        output_stack.push(operator_stack.top());
-                        operator_stack.pop();
-                        insert_offset++;
-                    }
-                    operator_stack.push(*current_subexpr);
+//        operator_stack.push(parents_stack.front());    // push the operator at the top of the tree in an expression
+//        while (!parents_stack.empty())
+//        {
+//            Expression current_expr = parents_stack.front();
+//            parents_stack.pop_front();
+//            for (std::list<Expression>::iterator current_subexpr = current_expr.expressions->begin(); current_subexpr != current_expr.expressions->end(); ++current_subexpr)
+//            {
+//                //output_stack.push(*current_subexpr);
+//                if (op_opcount[current_subexpr->type] == EXPR_OPCOUNT::SINGLETOKEN ||
+//                    op_opcount[current_subexpr->type] == EXPR_OPCOUNT::GROUPING)
+//                {
+//                    std::stack<Expression> temp;
+//                    if (insert_offset)
+//                    {
+//                        while (insert_offset)
+//                        {
+//                            temp.push(output_stack.top());
+//                            output_stack.pop();
+//                            insert_offset--;
+//                        }
+//                        output_stack.push(*current_subexpr);
+//                        while (!temp.empty())
+//                        {
+//                            output_stack.push(temp.top());
+//                            temp.pop();
+//                        }
+//                    }
+//                    else
+//                        output_stack.push(*current_subexpr);
+//                }
+//                else
+//                {
+//                    while (
+//                           !operator_stack.empty() &&
+//                           ((op_prec[current_subexpr->type] < op_prec[operator_stack.top().type]) ||
+//                           ((op_prec[current_subexpr->type] == op_prec[operator_stack.top().type]) && (op_assoc[operator_stack.top().type] == ASSOC::LEFT)))
+//                          )
+//                    {
+//                        output_stack.push(operator_stack.top());
+//                        operator_stack.pop();
+//                        insert_offset++;
+//                    }
+//                    operator_stack.push(*current_subexpr);
 
-                }
-            }
-        }
+//                }
+//            }
+//        }
 
-        while (!operator_stack.empty())
-        {
-            Expression test = operator_stack.top();
-            output_stack.push(test);
-            operator_stack.pop();
-        }
+//        while (!operator_stack.empty())
+//        {
+//            Expression test = operator_stack.top();
+//            output_stack.push(test);
+//            operator_stack.pop();
+//        }
 
         // transforming to AST phase
-        std::stack<Expression> rpn_stack;
-        while (!output_stack.empty())
-        {
-            rpn_stack.push(output_stack.top());
-            output_stack.pop();
-        }
+//        std::stack<Expression> rpn_stack;
+//        while (!output_stack.empty())
+//        {
+//            rpn_stack.push(output_stack.top());
+//            output_stack.pop();
+//        }
 
-        std::stack<Expression> result_stack;
-        while (!rpn_stack.empty())
-        {
-            Expression token = rpn_stack.top();
-            rpn_stack.pop();
+//        std::stack<Expression> result_stack;
+//        while (!rpn_stack.empty())
+//        {
+//            Expression token = rpn_stack.top();
+//            rpn_stack.pop();
 
-            if (op_opcount[token.type] != EXPR_OPCOUNT::SINGLETOKEN &&
-                op_opcount[token.type] != EXPR_OPCOUNT::GROUPING)
-            {
-                std::vector<Expression> exprs;
-                for (uint8_t i = 0; i < operand_count.at(op_opcount[token.type]); ++i)
-                {
-                    exprs.push_back(result_stack.top());
-                    result_stack.pop();
-                }
-                result_stack.push(Expression(token.type, exprs));
-            }
-            else
-                result_stack.push(token);
-        }
+//            if (op_opcount[token.type] != EXPR_OPCOUNT::SINGLETOKEN &&
+//                op_opcount[token.type] != EXPR_OPCOUNT::GROUPING)
+//            {
+//                std::vector<Expression> exprs;
+//                for (uint8_t i = 0; i < operand_count.at(op_opcount[token.type]); ++i)
+//                {
+//                    exprs.push_back(result_stack.top());
+//                    result_stack.pop();
+//                }
+//                result_stack.push(Expression(token.type, exprs));
+//            }
+//            else
+//                result_stack.push(token);
+//        }
 
-        return result_stack.top();
+//        return result_stack.top();
     }
 
 public:
