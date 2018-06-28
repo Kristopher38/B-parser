@@ -322,7 +322,7 @@ class Parser
         return output_stack.top();
     }
 
-    Expression rpn_expr(Expression to_transform)
+    Expression rpn_expr(Expression to_transform, GOAL goal = GOAL::EXPRESSION)
     {
         // if we're operating on a single token just return it unchanged
         if (op_opcount[to_transform.type] == EXPR_OPCOUNT::SINGLETOKEN)
@@ -330,7 +330,7 @@ class Parser
 
         // if we have a grouping expression we need to make sure expressions
         // inside it are properly ordered by applying rpn_expr on them
-        else if (op_opcount[to_transform.type] == EXPR_OPCOUNT::GROUPING)
+        else if (op_opcount[to_transform.type] == EXPR_OPCOUNT::GROUPING && goal != GOAL::STATEMENT)
         {
             for (auto it = to_transform.expressions->begin(); it != to_transform.expressions->end(); ++it)
                 *it = rpn_expr(*it);
@@ -420,13 +420,13 @@ public:
                         if (action.next_goal.goal == GOAL::STATEMENT && parser_stack.top().statement->expr)
                         {
                             Expression temp = *parser_stack.top().statement->expr;
-                            *parser_stack.top().statement->expr = rpn_expr(temp);
+                            *parser_stack.top().statement->expr = rpn_expr(temp, GOAL::STATEMENT);
                         }
-//                        if (action.next_goal.goal == GOAL::EXPRESSION && op_opcount[action.next_goal.expr] == EXPR_OPCOUNT::GROUPING)
-//                        {
-//                            Expression temp = *parser_stack.top().expression;
-//                            *parser_stack.top().expression = rpn_expr(temp);
-//                        }
+                        if (action.next_goal.goal == GOAL::EXPRESSION && op_opcount[action.next_goal.expr] == EXPR_OPCOUNT::GROUPING)
+                        {
+                            Expression temp = *parser_stack.top().expression;
+                            *parser_stack.top().expression = rpn_expr(temp, GOAL::EXPRESSION);
+                        }
 
                         if (action.return_state < 0)
                         {
