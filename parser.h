@@ -230,27 +230,6 @@ class Parser
         }
     }
 
-//    std::list<Expression> rpn_traverse_tree(Expression to_traverse)
-//    {
-//        std::list<Expression> parents_list;
-
-//        if (op_opcount[to_traverse.type] != EXPR_OPCOUNT::SINGLETOKEN &&
-//            op_opcount[to_traverse.type] != EXPR_OPCOUNT::GROUPING)
-//        {
-//            parents_list.push_back(to_traverse);
-//            for (auto it = to_traverse.expressions->begin(); it != to_traverse.expressions->end(); ++it)
-//            {
-//                if (op_opcount[to_traverse.type] == EXPR_OPCOUNT::TERNARY && it == ++to_traverse.expressions->begin())
-//                {
-//                    *it = rpn_expr(Expression(EXPR_TYPE::PARENTHESIS, *it));
-//                }
-//                std::list<Expression> traversed = rpn_traverse_tree(*it);
-//                parents_list.insert(parents_list.end(), traversed.begin(), traversed.end());
-//            }
-//        }
-//        return parents_list;
-//    }
-
     std::list<Expression> rpn_traverse_tree(Expression to_traverse)
     {
         std::list<Expression> parents_list;
@@ -269,7 +248,7 @@ class Parser
             if (op_opcount[to_traverse.type] != EXPR_OPCOUNT::UNARY)
                 parents_list.push_back(to_traverse.expressions->front());
             parents_list.push_back(to_traverse);
-            for (auto it = op_opcount[to_traverse.type] != EXPR_OPCOUNT::UNARY ? ++to_traverse.expressions->begin() : to_traverse.expressions->begin(); it != to_traverse.expressions->end(); ++it)
+            for (auto it = (op_opcount[to_traverse.type] != EXPR_OPCOUNT::UNARY ? ++to_traverse.expressions->begin() : to_traverse.expressions->begin()); it != to_traverse.expressions->end(); ++it)
             {
                 std::list<Expression> traversed = rpn_traverse_tree(*it);
                 parents_list.insert(parents_list.end(), traversed.begin(), traversed.end());
@@ -285,11 +264,8 @@ class Parser
         std::stack<Expression> output_stack;
         for (auto it = exprs.begin(); it != exprs.end(); ++it)
         {
-            if (op_opcount[it->type] == EXPR_OPCOUNT::SINGLETOKEN ||
-                op_opcount[it->type] == EXPR_OPCOUNT::GROUPING)
-            {
+            if (op_opcount[it->type] == EXPR_OPCOUNT::SINGLETOKEN || op_opcount[it->type] == EXPR_OPCOUNT::GROUPING)
                 output_stack.push(*it);
-            }
             else
             {
                 while (!operator_stack.empty() &&
@@ -322,7 +298,7 @@ class Parser
         return output_stack.top();
     }
 
-    Expression rpn_expr(Expression to_transform, GOAL goal = GOAL::EXPRESSION)
+    Expression rpn_expr(Expression to_transform)
     {
         // if we're operating on a single token just return it unchanged
         if (op_opcount[to_transform.type] == EXPR_OPCOUNT::SINGLETOKEN)
@@ -330,7 +306,7 @@ class Parser
 
         // if we have a grouping expression we need to make sure expressions
         // inside it are properly ordered by applying rpn_expr on them
-        else if (op_opcount[to_transform.type] == EXPR_OPCOUNT::GROUPING && goal != GOAL::STATEMENT)
+        else if (op_opcount[to_transform.type] == EXPR_OPCOUNT::GROUPING)
         {
             for (auto it = to_transform.expressions->begin(); it != to_transform.expressions->end(); ++it)
                 *it = rpn_expr(*it);
@@ -420,12 +396,15 @@ public:
                         if (action.next_goal.goal == GOAL::STATEMENT && parser_stack.top().statement->expr)
                         {
                             Expression temp = *parser_stack.top().statement->expr;
-                            *parser_stack.top().statement->expr = rpn_expr(temp, GOAL::STATEMENT);
+                            // safeguard for not rpn-ing the same expression twice, i.e. when
+                            // the expression in a statement is already rpn-ed
+                            if (temp.gentype != EXPR_OPCOUNT::GROUPING)
+                                *parser_stack.top().statement->expr = rpn_expr(temp);
                         }
                         if (action.next_goal.goal == GOAL::EXPRESSION && op_opcount[action.next_goal.expr] == EXPR_OPCOUNT::GROUPING)
                         {
                             Expression temp = *parser_stack.top().expression;
-                            *parser_stack.top().expression = rpn_expr(temp, GOAL::EXPRESSION);
+                            *parser_stack.top().expression = rpn_expr(temp);
                         }
 
                         if (action.return_state < 0)
