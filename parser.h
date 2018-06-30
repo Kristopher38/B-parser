@@ -262,6 +262,17 @@ class Parser
     {
         std::stack<Expression> operator_stack;
         std::stack<Expression> output_stack;
+        auto construct_expr = [&op_opcount, &output_stack, &operator_stack]()->void
+        {
+                    std::vector<Expression> constr_exprs;
+                    for (uint8_t i = 0; i < operand_count.at(op_opcount[operator_stack.top().type]); ++i)
+                    {
+                        constr_exprs.push_back(output_stack.top());
+                        output_stack.pop();
+                    }
+                    output_stack.push(Expression(operator_stack.top().type, constr_exprs));
+                    operator_stack.pop();
+        };
         for (auto it = exprs.begin(); it != exprs.end(); ++it)
         {
             if (op_opcount[it->type] == EXPR_OPCOUNT::SINGLETOKEN || op_opcount[it->type] == EXPR_OPCOUNT::GROUPING)
@@ -272,28 +283,14 @@ class Parser
                        ((op_prec[it->type] < op_prec[operator_stack.top().type]) ||
                        ((op_prec[it->type] == op_prec[operator_stack.top().type]) && (op_assoc[operator_stack.top().type] == ASSOC::LEFT))))
                 {
-                    std::vector<Expression> constr_exprs;
-                    for (uint8_t i = 0; i < operand_count.at(op_opcount[operator_stack.top().type]); ++i)
-                    {
-                        constr_exprs.push_back(output_stack.top());
-                        output_stack.pop();
-                    }
-                    output_stack.push(Expression(operator_stack.top().type, constr_exprs));
-                    operator_stack.pop();
+                    construct_expr();
                 }
                 operator_stack.push(*it);
             }
         }
         while (!operator_stack.empty())
         {
-            std::vector<Expression> constr_exprs;
-            for (uint8_t i = 0; i < operand_count.at(op_opcount[operator_stack.top().type]); ++i)
-            {
-                constr_exprs.push_back(output_stack.top());
-                output_stack.pop();
-            }
-            output_stack.push(Expression(operator_stack.top().type, constr_exprs));
-            operator_stack.pop();
+            construct_expr();
         }
         return output_stack.top();
     }
