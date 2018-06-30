@@ -6,7 +6,7 @@
 #include "statement.h"
 #include "expression.h"
 
-enum class ACTION {JUMP, CALL_NONTERM, SHIFT, REDUCE, CALL_NONTERM_REC};
+enum class ACTION {JUMP, CALL_NONTERM, SHIFT, REDUCE, CALL_NONTERM_REC, RETURN};
 
 enum class GOAL {LIBRARY, FUNCTION, STATEMENT, EXPRESSION, NONE};
 
@@ -19,8 +19,8 @@ struct Goal
         EXPR_TYPE expr;
     };
 
-    Goal(STATEMENT_TYPE _statement) : goal(GOAL::STATEMENT), statement(_statement) {}
-    Goal(EXPR_TYPE _expr) : goal(GOAL::EXPRESSION), expr(_expr) {}
+    constexpr Goal(STATEMENT_TYPE _statement) : goal(GOAL::STATEMENT), statement(_statement) {}
+    constexpr Goal(EXPR_TYPE _expr) : goal(GOAL::EXPRESSION), expr(_expr) {}
     Goal(GOAL _goal)
     {
         if (_goal == GOAL::EXPRESSION || _goal == GOAL::STATEMENT)
@@ -28,7 +28,7 @@ struct Goal
         else
             goal = _goal;
     }
-    Goal() : goal(GOAL::NONE) {}
+    constexpr Goal() : goal(GOAL::NONE), statement(STATEMENT_TYPE::NOP) {}
 
 
 };
@@ -39,15 +39,19 @@ struct Action
     int next_state;
     int return_state;
     Goal next_goal;
+    bool load_next_token;
 
-    Action() : next_action(ACTION::JUMP), next_state(-1), return_state(-1), next_goal(Goal()) {}
+    //Action() : next_action(ACTION::JUMP), next_state(-1), return_state(-1), next_goal(Goal()), load_next_token(false) {}
+    Action() {}
 
-    Action(ACTION _next_action, int _next_state, int _return_state = -1)
-        : next_action(_next_action), next_state(_next_state), return_state(_return_state) {}
+    constexpr Action(ACTION _next_action, int _next_state, int _return_state = -1)
+        : next_action(_next_action), next_state(_next_state), return_state(_return_state), load_next_token(false)  {}
 
-    Action(ACTION _next_action, Goal _next_goal = Goal(), int _return_state = -1)
-        : next_action(_next_action), next_goal(_next_goal), return_state(_return_state) {}
+    constexpr Action(ACTION _next_action, Goal _next_goal = Goal(), int _return_state = -1)
+        : next_action(_next_action), next_state(-1), next_goal(_next_goal), return_state(_return_state), load_next_token(false)  {}
 
+    constexpr Action(ACTION _next_action, bool _load_next_token)
+        : next_action(_next_action), next_state(-1), return_state(-1), next_goal(Goal()), load_next_token(_load_next_token) {}
 };
 
 struct Current
@@ -119,7 +123,15 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(2),
-        Action(ACTION::REDUCE, Goal(GOAL::LIBRARY))
+        Action(ACTION::REDUCE, Goal(GOAL::LIBRARY), 3)
+    },
+    {
+        Current(3),
+        Action(ACTION::RETURN, true)
+    },
+    {
+        Current(9),
+        Action(ACTION::RETURN, false)
     },
     {
         Current(4, TOKEN_IDENTIFIER),
@@ -148,10 +160,6 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     {
         Current(94),
         Action(ACTION::REDUCE, Goal(GOAL::FUNCTION), 9)
-    },
-    {
-        Current(9),
-        Action(ACTION::REDUCE, Goal(GOAL::NONE))
     },
     {
         Current(8, TOKEN_CURLYBRACE_OPEN),
@@ -199,7 +207,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(12),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::COMPOUND))
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::COMPOUND), 3)
     },
     {
         Current(13, TOKEN_PARENTHESIS_OPEN),
@@ -219,7 +227,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(17),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::CONDITIONAL), 35)
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::CONDITIONAL), 9)
     },
     {
         Current(18, TOKEN_PARENTHESIS_OPEN),
@@ -239,7 +247,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(22),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::LOOP), 35)
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::LOOP), 9)
     },
     {
         Current(23),
@@ -251,7 +259,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(25),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::RETURN))
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::RETURN), 3)
     },
     {
         Current(26, TOKEN_IDENTIFIER),
@@ -287,7 +295,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(31),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::VAR_DEF))
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::VAR_DEF), 3)
     },
     {
         Current(32, TOKEN_SEMICOLON),
@@ -295,15 +303,15 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(33),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::EXPRESSION))
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::EXPRESSION), 3)
     },
     {
         Current(34),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::NOP))
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::NOP), 3)
     },
     {
         Current(35),
-        Action(ACTION::REDUCE, Goal(GOAL::NONE))
+        Action(ACTION::RETURN)
     },
     {
         Current(11, TOKEN_INT_LITERAL),
@@ -431,7 +439,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(42),
-        Action(ACTION::REDUCE, Goal(GOAL::NONE))
+        Action(ACTION::RETURN)
     },
     {
         Current(43),
@@ -687,7 +695,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(78),
-        Action(ACTION::REDUCE, Goal(GOAL::NONE))
+        Action(ACTION::RETURN)
     },
 
     {
@@ -812,7 +820,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(98),
-        Action(ACTION::REDUCE, Goal(GOAL::NONE))
+        Action(ACTION::RETURN)
     },
     {
         Current(106),
@@ -1056,7 +1064,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(99),
-        Action(ACTION::REDUCE, Goal(GOAL::NONE))
+        Action(ACTION::RETURN)
     }
 };
 

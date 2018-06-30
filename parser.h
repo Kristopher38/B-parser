@@ -225,7 +225,7 @@ class Parser
                 return ParserToken(reduce_function(ptokens));
             case GOAL::LIBRARY:
                 return ParserToken(reduce_library(ptokens));
-            case GOAL::NONE:
+            default:
                 break;
         }
     }
@@ -368,59 +368,41 @@ public:
                     return_stack.push(action.return_state);
                     break;
 
+                case ACTION::RETURN:
+                    current_state = return_stack.top();
+                    return_stack.pop();
+                    reduce_stack.pop();
+                    reduce_stack.top()++;
+                    if (action.load_next_token)
+                        return;
+                    else break;
+
                 case ACTION::REDUCE:
-                    if (action.next_goal.goal != GOAL::NONE)
+                    std::list<ParserToken> to_reduce;
+                    for (int i = reduce_stack.top(); i > 0; --i)
                     {
-                        //DebugPrinter::print_stack(parser_stack, true);
-                        std::vector<ParserToken> to_reduce;
-
-                        for (int i = reduce_stack.top(); i > 0; --i)
-                        {
-                            to_reduce.push_back(parser_stack.top());
-                            parser_stack.pop();
-                        }
-
-
-                        std::list<ParserToken> to_reduce2;
-                        for (int i = 0; i < to_reduce.size(); ++i)
-                            to_reduce2.push_back(to_reduce[i]);
-
-                        ParserToken reduced_token = this->reduce(action.next_goal, to_reduce2);
-                        parser_stack.push(reduced_token);
-
-                        current_state = action.return_state;
-
-                        if (action.next_goal.goal == GOAL::STATEMENT && parser_stack.top().statement->expr)
-                        {
-                            Expression temp = *parser_stack.top().statement->expr;
-                            // safeguard for not rpn-ing the same expression twice, i.e. when
-                            // the expression in a statement is already rpn-ed
-                            if (temp.gentype != EXPR_OPCOUNT::GROUPING)
-                                *parser_stack.top().statement->expr = rpn_expr(temp);
-                        }
-                        if (action.next_goal.goal == GOAL::EXPRESSION && op_opcount[action.next_goal.expr] == EXPR_OPCOUNT::GROUPING)
-                        {
-                            Expression temp = *parser_stack.top().expression;
-                            *parser_stack.top().expression = rpn_expr(temp);
-                        }
-
-                        if (action.return_state < 0)
-                        {
-                            current_state = return_stack.top();
-                            return_stack.pop();
-                            reduce_stack.pop();
-                            reduce_stack.top()++;
-                            return;
-                        }
+                        to_reduce.push_back(parser_stack.top());
+                        parser_stack.pop();
                     }
-                    else
+                    ParserToken reduced_token = this->reduce(action.next_goal, to_reduce);
+                    parser_stack.push(reduced_token);
+
+                    if (action.next_goal.goal == GOAL::STATEMENT && parser_stack.top().statement->expr)
                     {
-                        current_state = return_stack.top();
-                        return_stack.pop();
-                        reduce_stack.pop();
-                        reduce_stack.top()++;
+                        Expression temp = *parser_stack.top().statement->expr;
+                        // safeguard for not rpn-ing the same expression twice, i.e. when
+                        // the expression in a statement is already rpn-ed
+                        if (temp.gentype != EXPR_OPCOUNT::GROUPING)
+                            *parser_stack.top().statement->expr = rpn_expr(temp);
                     }
-                break;
+                    if (action.next_goal.goal == GOAL::EXPRESSION && op_opcount[action.next_goal.expr] == EXPR_OPCOUNT::GROUPING)
+                    {
+                        Expression temp = *parser_stack.top().expression;
+                        *parser_stack.top().expression = rpn_expr(temp);
+                    }
+
+                    current_state = action.return_state;
+                    break;
             }
         }
     }
