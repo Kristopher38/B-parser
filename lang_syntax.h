@@ -6,7 +6,7 @@
 #include "statement.h"
 #include "expression.h"
 
-enum class ACTION {JUMP, CALL_NONTERM, SHIFT, REDUCE, CALL_NONTERM_REC, RETURN};
+enum class ACTION {JUMP, CALL_NONTERM, SHIFT, REDUCE, CALL_NONTERM_REC, RETURN, ERR};
 
 enum class GOAL {LIBRARY, FUNCTION, STATEMENT, EXPRESSION, NONE};
 
@@ -40,12 +40,16 @@ struct Action
     int return_state;
     Goal next_goal;
     bool load_next_token;
+    std::optional<std::string> error_msg;
 
     //Action() : next_action(ACTION::JUMP), next_state(-1), return_state(-1), next_goal(Goal()), load_next_token(false) {}
-    Action() {}
+    Action() : next_action(ACTION::SHIFT) {}
 
     constexpr Action(ACTION _next_action, int _next_state, int _return_state = -1)
         : next_action(_next_action), next_state(_next_state), return_state(_return_state), load_next_token(false)  {}
+
+    Action(ACTION _next_action, std::string _error_msg, int _next_state)
+        : next_action(_next_action), next_state(_next_state), error_msg(std::move(_error_msg)) {}
 
     constexpr Action(ACTION _next_action, Goal _next_goal = Goal(), int _return_state = -1)
         : next_action(_next_action), next_state(-1), next_goal(_next_goal), return_state(_return_state), load_next_token(false)  {}
@@ -118,6 +122,10 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
         Action(ACTION::SHIFT, 4)
     },
     {
+        Current(1),
+        Action(ACTION::ERR, "Expected function name", 4)
+    },
+    {
         Current(93, TOKEN_EOF),
         Action(ACTION::JUMP, 2)
     },
@@ -142,6 +150,10 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
         Action(ACTION::SHIFT, 7)
     },
     {
+        Current(4),
+        Action(ACTION::ERR, "Expected function argument list", 7)
+    },
+    {
         Current(5, TOKEN_COMMA),
         Action(ACTION::SHIFT, 6)
     },
@@ -150,8 +162,16 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
         Action(ACTION::SHIFT, 7)
     },
     {
+        Current(5),
+        Action(ACTION::ERR, "Expected \":\" or \",\"", 7)
+    },
+    {
         Current(6, TOKEN_IDENTIFIER),
         Action(ACTION::SHIFT, 5)
+    },
+    {
+        Current(6),
+        Action(ACTION::ERR, "Expected function argument", 5)
     },
     {
         Current(7),
@@ -214,12 +234,20 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
         Action(ACTION::SHIFT, 14)
     },
     {
+        Current(13),
+        Action(ACTION::ERR, "Expected \"(\" after if", 14)
+    },
+    {
         Current(14),
         Action(ACTION::CALL_NONTERM, 11, 15)
     },
     {
         Current(15, TOKEN_PARENTHESIS_CLOSE),
         Action(ACTION::SHIFT, 16)
+    },
+    {
+        Current(15),
+        Action(ACTION::ERR, "Expected \")\" at the end of condition", 16)
     },
     {
         Current(16),
@@ -234,12 +262,20 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
         Action(ACTION::SHIFT, 19)
     },
     {
+        Current(18),
+        Action(ACTION::ERR, "Expected \"(\" after while", 19)
+    },
+    {
         Current(19),
         Action(ACTION::CALL_NONTERM, 11, 20)
     },
     {
         Current(20, TOKEN_PARENTHESIS_CLOSE),
         Action(ACTION::SHIFT, 21)
+    },
+    {
+        Current(20),
+        Action(ACTION::ERR, "Expected \")\" at the end of condition", 21)
     },
     {
         Current(21),
@@ -258,12 +294,20 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
         Action(ACTION::JUMP, 25)
     },
     {
+        Current(24),
+        Action(ACTION::ERR, "Expected \";\" at the end of statement", 25)
+    },
+    {
         Current(25),
         Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::RETURN), 3)
     },
     {
         Current(26, TOKEN_IDENTIFIER),
         Action(ACTION::SHIFT, 27)
+    },
+    {
+        Current(26),
+        Action(ACTION::ERR, "Expected variable name after var", 27)
     },
     {
         Current(27, TOKEN_SEMICOLON),
@@ -278,8 +322,16 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
         Action(ACTION::SHIFT, 29)
     },
     {
+        Current(27),
+        Action(ACTION::ERR, "Expected \",\", \"=\" or \";\"", 31)
+    },
+    {
         Current(28, TOKEN_IDENTIFIER),
         Action(ACTION::SHIFT, 27)
+    },
+    {
+        Current(28),
+        Action(ACTION::ERR, "Expected variable name after \",\"", 27)
     },
     {
         Current(29),
@@ -294,6 +346,10 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
         Action(ACTION::JUMP, 31)
     },
     {
+        Current(30),
+        Action(ACTION::ERR, "Expected \",\" or \";\" after variable declaration", 31)
+    },
+    {
         Current(31),
         Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::VAR_DEF), 3)
     },
@@ -302,16 +358,16 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
         Action(ACTION::JUMP, 33)
     },
     {
+        Current(32),
+        Action(ACTION::ERR, "Expected \";\" at the end of statement", 33)
+    },
+    {
         Current(33),
         Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::EXPRESSION), 3)
     },
     {
         Current(34),
         Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::NOP), 3)
-    },
-    {
-        Current(35),
-        Action(ACTION::RETURN)
     },
     {
         Current(11, TOKEN_INT_LITERAL),

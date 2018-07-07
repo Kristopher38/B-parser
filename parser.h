@@ -18,11 +18,19 @@
 
 #include "debugprinter.h"
 
+struct ErrorMsg
+{
+    std::string msg;
+    int line_num;
+    ErrorMsg(std::string _msg, int _line_num) : msg(_msg), line_num(_line_num) {}
+};
+
 class Parser
 {
     std::stack<ParserToken> parser_stack;
     std::stack<int> return_stack;
     std::stack<int> reduce_stack;
+    std::list<ErrorMsg> error_list;
     int current_state = 0;
 
     Action choose_action(Token lookahead_token)
@@ -330,7 +338,7 @@ public:
     void feed(Token lookahead_token)
     {
         Action action;
-        while (action.next_action != ACTION::SHIFT)
+        while (true)
         {
             action = this->choose_action(lookahead_token);
             switch (action.next_action)
@@ -368,6 +376,13 @@ public:
                     return_stack.push(action.return_state);
                     break;
 
+                case ACTION::ERR:
+                    current_state = action.next_state;
+                    error_list.push_back(ErrorMsg(action.error_msg.value(), lookahead_token.line_num));
+                    parser_stack.push(ParserToken(Token(TOKEN_ERROR, lookahead_token.line_num)));
+                    reduce_stack.top()++;
+                    break;
+
                 case ACTION::RETURN:
                     current_state = return_stack.top();
                     return_stack.pop();
@@ -379,36 +394,47 @@ public:
 
                 case ACTION::REDUCE:
                     std::list<ParserToken> to_reduce;
+                    bool ill_formed = false;
                     for (int i = reduce_stack.top(); i > 0; --i)
                     {
+                        if (parser_stack.top().token && parser_stack.top().token->type == TOKEN_ERROR)
+                            ill_formed = true;
                         to_reduce.push_back(parser_stack.top());
                         parser_stack.pop();
                     }
-                    ParserToken reduced_token = this->reduce(action.next_goal, to_reduce);
-                    parser_stack.push(reduced_token);
 
-                    if (action.next_goal.goal == GOAL::STATEMENT && parser_stack.top().statement->expr)
+                    if (!ill_formed)
                     {
-                        Expression temp = *parser_stack.top().statement->expr;
-                        // safeguard for not rpn-ing the same expression twice, i.e. when
-                        // the expression in a statement is already rpn-ed
-                        if (temp.gentype != EXPR_OPCOUNT::GROUPING)
-                            *parser_stack.top().statement->expr = rpn_expr(temp);
-                    }
-                    if (action.next_goal.goal == GOAL::EXPRESSION && op_opcount[action.next_goal.expr] == EXPR_OPCOUNT::GROUPING)
-                    {
-                        Expression temp = *parser_stack.top().expression;
-                        *parser_stack.top().expression = rpn_expr(temp);
-                    }
+                        ParserToken reduced_token = this->reduce(action.next_goal, to_reduce);
+                        parser_stack.push(reduced_token);
+
+                        if (action.next_goal.goal == GOAL::STATEMENT && parser_stack.top().statement->expr)
+                        {
+                            Expression temp = *parser_stack.top().statement->expr;
+                            // safeguard for not rpn-ing the same expression twice, i.e. when
+                            // the expression in a statement is already rpn-ed
+                            if (temp.gentype != EXPR_OPCOUNT::GROUPING)
+                                *parser_stack.top().statement->expr = rpn_expr(temp);
+                        }
+                        if (action.next_goal.goal == GOAL::EXPRESSION && op_opcount[action.next_goal.expr] == EXPR_OPCOUNT::GROUPING)
+                        {
+                            Expression temp = *parser_stack.top().expression;
+                            *parser_stack.top().expression = rpn_expr(temp);
+                        }
+                    } else parser_stack.push(ParserToken(Token(TOKEN_ERROR, lookahead_token.line_num)));
 
                     current_state = action.return_state;
                     break;
             }
         }
     }
-
+#include <iostream>
     Library finish()
     {
+        for (auto it = error_list.begin(); it != error_list.end(); ++it)
+        {
+            std::cout<<"Line "<<it->line_num<<": "<<it->msg<<std::endl;
+        }
         if (!parser_stack.empty() &&
             parser_stack.top().gettag() == PARSERTOKEN::LIBRARY)
             return *parser_stack.top().library;
