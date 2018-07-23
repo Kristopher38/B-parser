@@ -40,7 +40,7 @@ struct Action
     int return_state;
     Goal next_goal;
     bool load_next_token;
-    std::optional<std::string> error_msg;
+    std::shared_ptr<std::string> error_msg;
 
     //Action() : next_action(ACTION::JUMP), next_state(-1), return_state(-1), next_goal(Goal()), load_next_token(false) {}
     Action() : next_action(ACTION::SHIFT) {}
@@ -48,8 +48,8 @@ struct Action
     constexpr Action(ACTION _next_action, int _next_state, int _return_state = -1)
         : next_action(_next_action), next_state(_next_state), return_state(_return_state), load_next_token(false)  {}
 
-    Action(ACTION _next_action, std::string _error_msg, int _next_state)
-        : next_action(_next_action), next_state(_next_state), error_msg(std::move(_error_msg)) {}
+    Action(ACTION _next_action, std::string _error_msg, int _return_state = -1)
+        : next_action(_next_action), return_state(_return_state), error_msg(std::make_shared<std::string>(_error_msg)) {}
 
     constexpr Action(ACTION _next_action, Goal _next_goal = Goal(), int _return_state = -1)
         : next_action(_next_action), next_state(-1), next_goal(_next_goal), return_state(_return_state), load_next_token(false)  {}
@@ -123,7 +123,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(1),
-        Action(ACTION::ERR, "Expected function name", 4)
+        Action(ACTION::ERR, std::string("Expected function name"), 8)
     },
     {
         Current(93, TOKEN_EOF),
@@ -135,11 +135,11 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(3),
-        Action(ACTION::RETURN, true)
+        Action(ACTION::RETURN, true)    // return
     },
     {
         Current(9),
-        Action(ACTION::RETURN, false)
+        Action(ACTION::RETURN, false)   // break
     },
     {
         Current(4, TOKEN_IDENTIFIER),
@@ -151,7 +151,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(4),
-        Action(ACTION::ERR, "Expected function argument list after function name", 7)
+        Action(ACTION::ERR, std::string("Expected function argument list or \":\" after function name"), 8)
     },
     {
         Current(5, TOKEN_COMMA),
@@ -163,7 +163,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(5),
-        Action(ACTION::ERR, "Expected \":\" or \",\" after function parameter", 7)
+        Action(ACTION::ERR, std::string("Expected \":\" or \",\" after function parameter"), 8)
     },
     {
         Current(6, TOKEN_IDENTIFIER),
@@ -171,7 +171,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(6),
-        Action(ACTION::ERR, "Expected function argument after \",\" (missing argument identifier)", 5)
+        Action(ACTION::ERR, std::string("Expected function argument after \",\" (missing argument identifier)"), 8)
     },
     {
         Current(7),
@@ -235,7 +235,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(13),
-        Action(ACTION::ERR, "Expected \"(\" after if (missing opening parenthesis)", 14)
+        Action(ACTION::ERR, std::string("Expected \"(\" after if (missing opening parenthesis)"), 8)
     },
     {
         Current(14),
@@ -247,7 +247,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(15),
-        Action(ACTION::ERR, "Expected \")\" at the end of condition (missing closing parenthesis)", 16)
+        Action(ACTION::ERR, std::string("Expected \")\" at the end of condition (missing closing parenthesis)"), 8)
     },
     {
         Current(16),
@@ -263,7 +263,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(18),
-        Action(ACTION::ERR, "Expected \"(\" after while (missing opening parenthesis)", 19)
+        Action(ACTION::ERR, std::string("Expected \"(\" after while (missing opening parenthesis)"), 8)
     },
     {
         Current(19),
@@ -275,7 +275,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(20),
-        Action(ACTION::ERR, "Expected \")\" at the end of condition (missing closing parenthesis)", 21)
+        Action(ACTION::ERR, std::string("Expected \")\" at the end of condition (missing closing parenthesis)"), 8)
     },
     {
         Current(21),
@@ -295,7 +295,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(24),
-        Action(ACTION::ERR, "Expected \";\" at the end of statement (missing semicolon)", 25)
+        Action(ACTION::ERR, std::string("Expected \";\" at the end of statement (missing semicolon)"), 8)
     },
     {
         Current(25),
@@ -307,7 +307,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(26),
-        Action(ACTION::ERR, "Expected variable name after var (missing variable identifier)", 27)
+        Action(ACTION::ERR, std::string("Expected variable name after var (missing variable identifier)"), 8)
     },
     {
         Current(27, TOKEN_SEMICOLON),
@@ -323,7 +323,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(27),
-        Action(ACTION::ERR, "Expected \",\", \"=\" or \";\" after variable name in a declaration", 31)
+        Action(ACTION::ERR, std::string("Expected \",\", \"=\" or \";\" after variable name in a declaration"), 8)
     },
     {
         Current(28, TOKEN_IDENTIFIER),
@@ -331,7 +331,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(28),
-        Action(ACTION::ERR, "Expected variable name after \",\" in multiple variable declaration (missing variable identifier)", 27)
+        Action(ACTION::ERR, std::string("Expected variable name after \",\" in multiple variable declaration (missing variable identifier)"), 8)
     },
     {
         Current(29),
@@ -347,7 +347,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(30),
-        Action(ACTION::ERR, "Expected \",\" or \";\" after variable declaration", 31)
+        Action(ACTION::ERR, std::string("Expected \",\" or \";\" after variable declaration"), 8)
     },
     {
         Current(31),
@@ -359,7 +359,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(32),
-        Action(ACTION::ERR, "Expected \";\" at the end of statement (missing semicolon)", 33)
+        Action(ACTION::ERR, std::string("Expected \";\" at the end of statement (missing semicolon)"), 8)
     },
     {
         Current(33),
@@ -385,9 +385,13 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
         Current(11, TOKEN_PARENTHESIS_OPEN),
         Action(ACTION::SHIFT, 39)
     },
+//    {
+//        Current(11),
+//        Action(ACTION::CALL_NONTERM, 11, 42)
+//    },
     {
         Current(11),
-        Action(ACTION::CALL_NONTERM, 11, 42)
+        Action(ACTION::ERR, std::string("Expected literal, identifier, opening parenthesis, unary operator or nested expression"), 8)
     },
     {
         Current(11, TOKEN_AMP),
@@ -507,7 +511,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(44),
-        Action(ACTION::ERR, "Expected \"]\" after index expression (missing closing square bracket)", 45)
+        Action(ACTION::ERR, std::string("Expected \"]\" after index expression (missing closing square bracket)"), 8)
     },
     {
         Current(45),
@@ -531,7 +535,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(48),
-        Action(ACTION::ERR, "Expected \",\" or \")\" after function parameter", 50)
+        Action(ACTION::ERR, std::string("Expected \",\" or \")\" after function parameter"), 8)
     },
     {
         Current(49),
@@ -687,7 +691,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(75),
-        Action(ACTION::ERR, "Expected \":\" after true-expr in ternary expression", 76)
+        Action(ACTION::ERR, std::string("Expected \":\" after true-expr in ternary expression"), 8)
     },
     {
         Current(76),
@@ -703,7 +707,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(96),
-        Action(ACTION::ERR, "Expected \")\" at the end of expression (missing closing parenthesis)", 41)
+        Action(ACTION::ERR, std::string("Expected \")\" at the end of expression (missing closing parenthesis)"), 8)
     },
     {
         Current(78, TOKEN_SQBRACKET_OPEN),
@@ -786,9 +790,13 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
         Current(97, TOKEN_PARENTHESIS_OPEN),
         Action(ACTION::SHIFT, 103)
     },
+//    {
+//        Current(97),
+//        Action(ACTION::CALL_NONTERM, 97, 98)
+//    },
     {
         Current(97),
-        Action(ACTION::CALL_NONTERM, 97, 98)
+        Action(ACTION::ERR, std::string("Expected literal, identifier, opening parenthesis, unary operator or nested expression"), 8)
     },
     {
         Current(97, TOKEN_AMP),
@@ -904,7 +912,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(107),
-        Action(ACTION::ERR, "Expected \"]\" after index expression (missing closing square bracket)", 108)
+        Action(ACTION::ERR, std::string("Expected \"]\" after index expression (missing closing square bracket)"), 8)
     },
     {
         Current(108),
@@ -928,7 +936,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(110),
-        Action(ACTION::ERR, "Expected \",\" or \")\" after function parameter", 112)
+        Action(ACTION::ERR, std::string("Expected \",\" or \")\" after function parameter"), 8)
     },
     {
         Current(111),
@@ -1076,7 +1084,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(146),
-        Action(ACTION::ERR, "Expected \":\" after true-expr in ternary expression", 147)
+        Action(ACTION::ERR, std::string("Expected \":\" after true-expr in ternary expression"), 8)
     },
     {
         Current(147),
@@ -1092,7 +1100,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(104),
-        Action(ACTION::ERR, "Expected \")\" at the end of expression (missing closing parenthesis)", 105)
+        Action(ACTION::ERR, std::string("Expected \")\" at the end of expression (missing closing parenthesis)"), 8)
     },
     {
         Current(99, TOKEN_SQBRACKET_OPEN),

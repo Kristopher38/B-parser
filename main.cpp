@@ -56,7 +56,8 @@ int main(int argc, char* argv[])
 
         Library kek = parser.finish();
 
-        DebugPrinter::print_debug_library(kek, testcase, 0);
+        if (!kek.is_empty())
+            DebugPrinter::print_debug_library(kek, testcase, 0);
     }
     return 0;
 }

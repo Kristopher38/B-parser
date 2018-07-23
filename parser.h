@@ -32,10 +32,12 @@ class Parser
     std::stack<int> reduce_stack;
     std::list<ErrorMsg> error_list;
     int current_state = 0;
+    unsigned last_line = 1;
+    bool unrecoverable_state = false;
 
     Action choose_action(Token lookahead_token)
     {
-        return this->choose_action(current_state, lookahead_token.type);
+        return this->choose_action(this->current_state, lookahead_token.type);
     }
 
     Action choose_action(int _current_state, TOKEN lookahead_token_type)
@@ -270,7 +272,7 @@ class Parser
     {
         std::stack<Expression> operator_stack;
         std::stack<Expression> output_stack;
-        auto construct_expr = [&op_opcount, &output_stack, &operator_stack]()->void
+        auto construct_expr = [&output_stack, &operator_stack]()->void
         {
                     std::vector<Expression> constr_exprs;
                     for (uint8_t i = 0; i < operand_count.at(op_opcount[operator_stack.top().type]); ++i)
@@ -340,7 +342,12 @@ public:
         Action action;
         while (true)
         {
-            action = this->choose_action(lookahead_token);
+            if (this->unrecoverable_state && lookahead_token.type == TOKEN_SEMICOLON)
+            {
+                this->unrecoverable_state = false;
+                this->current_state = return_stack.top();
+            }
+            action = this->unrecoverable_state ? Action(ACTION::SHIFT, -1) : this->choose_action(lookahead_token);
             switch (action.next_action)
             {
                 // shift is for situations where we want to return after shifting
@@ -350,7 +357,8 @@ public:
                 case ACTION::SHIFT:
                     parser_stack.push(ParserToken(lookahead_token));
                     reduce_stack.top()++;
-                    current_state = action.next_state;
+                    this->current_state = action.next_state;
+                    this->last_line = lookahead_token.line_num;
                     return;
 
                 // jump is for situations where we don't want to return after shifting
@@ -359,32 +367,34 @@ public:
                 // except if we are pushing last terminal in an expression
                 // (since expressions can recursively call themselves)
                 case ACTION::JUMP:
-                    current_state = action.next_state;  // jump to state
+                    this->current_state = action.next_state;  // jump to state
                     parser_stack.push(ParserToken(lookahead_token));
                     reduce_stack.top()++;
+                    this->last_line = lookahead_token.line_num;
                     break;
 
                 case ACTION::CALL_NONTERM:
-                    current_state = action.next_state;  // get nonterminal state
+                    this->current_state = action.next_state;  // get nonterminal state
                     reduce_stack.push(0);
                     return_stack.push(action.return_state);    // push return pathstate
                     break;
 
                 case ACTION::CALL_NONTERM_REC:
-                    current_state = action.next_state;
+                    this->current_state = action.next_state;
                     reduce_stack.push(1);
                     return_stack.push(action.return_state);
                     break;
 
                 case ACTION::ERR:
-                    current_state = action.next_state;
-                    error_list.push_back(ErrorMsg(action.error_msg.value(), lookahead_token.line_num));
-                    parser_stack.push(ParserToken(Token(TOKEN_ERROR, lookahead_token.line_num)));
+                    this->unrecoverable_state = true;
+                    error_list.push_back(ErrorMsg(*action.error_msg, this->last_line));
+                    parser_stack.push(ParserToken(true));
                     reduce_stack.top()++;
-                    break;
+                    return_stack.push(action.return_state);     // push state to return to after recovery
+                    return;
 
                 case ACTION::RETURN:
-                    current_state = return_stack.top();
+                    this->current_state = return_stack.top();
                     return_stack.pop();
                     reduce_stack.pop();
                     reduce_stack.top()++;
@@ -397,7 +407,7 @@ public:
                     bool ill_formed = false;
                     for (int i = reduce_stack.top(); i > 0; --i)
                     {
-                        if (parser_stack.top().token && parser_stack.top().token->type == TOKEN_ERROR)
+                        if (parser_stack.top().is_ill_formed())
                             ill_formed = true;
                         to_reduce.push_back(parser_stack.top());
                         parser_stack.pop();
@@ -421,9 +431,9 @@ public:
                             Expression temp = *parser_stack.top().expression;
                             *parser_stack.top().expression = rpn_expr(temp);
                         }
-                    } else parser_stack.push(ParserToken(Token(TOKEN_ERROR, lookahead_token.line_num)));
+                    } else parser_stack.push(ParserToken(true));
 
-                    current_state = action.return_state;
+                    this->current_state = action.return_state;
                     break;
             }
         }
@@ -431,14 +441,20 @@ public:
 #include <iostream>
     Library finish()
     {
-        for (auto it = error_list.begin(); it != error_list.end(); ++it)
+        if (error_list.size() > 0)
         {
-            std::cout<<"Line "<<it->line_num<<": "<<it->msg<<std::endl;
+            for (auto it = error_list.begin(); it != error_list.end(); ++it)
+            {
+                std::cout<<"Line "<<it->line_num<<": "<<it->msg<<std::endl;
+            }
         }
-        if (!parser_stack.empty() &&
-            parser_stack.top().gettag() == PARSERTOKEN::LIBRARY)
-            return *parser_stack.top().library;
-        else return Library();
+        else
+        {
+            if (!parser_stack.empty() &&
+                parser_stack.top().gettag() == PARSERTOKEN::LIBRARY)
+                return *parser_stack.top().library;
+        }
+        return Library();
     }
 };
 

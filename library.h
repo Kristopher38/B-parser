@@ -9,6 +9,7 @@ struct Library
 
     Library(std::list<Function> _functions) : functions(_functions) {}
     Library() : functions(std::list<Function>()) {}
+    bool is_empty() { return functions.empty(); }
 };
 
 #endif // H_LIBRARY
