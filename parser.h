@@ -346,8 +346,12 @@ public:
             {
                 this->unrecoverable_state = false;
                 this->current_state = return_stack.top();
+                this->last_line = lookahead_token.line_num;
+                return;
             }
-            action = this->unrecoverable_state ? Action(ACTION::SHIFT, -1) : this->choose_action(lookahead_token);
+            else
+                action = this->unrecoverable_state ? Action(ACTION::SHIFT, -1) : this->choose_action(lookahead_token);
+
             switch (action.next_action)
             {
                 // shift is for situations where we want to return after shifting
@@ -391,6 +395,7 @@ public:
                     parser_stack.push(ParserToken(true));
                     reduce_stack.top()++;
                     return_stack.push(action.return_state);     // push state to return to after recovery
+                    this->last_line = lookahead_token.line_num;
                     return;
 
                 case ACTION::RETURN:
