@@ -119,10 +119,6 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(93, TOKEN_EOF),
-        Action(ACTION::JUMP, 2)
-    },
-    {
-        Current(2),
         Action(ACTION::REDUCE, Goal(GOAL::LIBRARY), 3)
     },
     {
@@ -199,7 +195,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(95, TOKEN_CURLYBRACE_CLOSE),
-        Action(ACTION::JUMP, 12)
+        Action(ACTION::SHIFT, 12)
     },
     {
         Current(10, TOKEN_CURLYBRACE_CLOSE),
@@ -207,7 +203,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(12),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::COMPOUND), 3)
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::COMPOUND), 9)
     },
     {
         Current(13, TOKEN_PARENTHESIS_OPEN),
@@ -255,11 +251,11 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(24, TOKEN_SEMICOLON),
-        Action(ACTION::JUMP, 25)
+        Action(ACTION::SHIFT, 25)
     },
     {
         Current(25),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::RETURN), 3)
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::RETURN), 9)
     },
     {
         Current(26, TOKEN_IDENTIFIER),
@@ -267,7 +263,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(27, TOKEN_SEMICOLON),
-        Action(ACTION::JUMP, 31)
+        Action(ACTION::SHIFT, 31)
     },
     {
         Current(27, TOKEN_COMMA),
@@ -291,23 +287,23 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(30, TOKEN_SEMICOLON),
-        Action(ACTION::JUMP, 31)
+        Action(ACTION::SHIFT, 31)
     },
     {
         Current(31),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::VAR_DEF), 3)
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::VAR_DEF), 9)
     },
     {
         Current(32, TOKEN_SEMICOLON),
-        Action(ACTION::JUMP, 33)
+        Action(ACTION::SHIFT, 33)
     },
     {
         Current(33),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::EXPRESSION), 3)
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::EXPRESSION), 9)
     },
     {
         Current(34),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::NOP), 3)
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::NOP), 9)
     },
     {
         Current(35),

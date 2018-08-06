@@ -18,16 +18,35 @@
 
 #include "debugprinter.h"
 
+class CurrentState
+{
+    private:
+        std::stack<int> current_state;
+    public:
+        CurrentState()
+        {
+            current_state.push(0);
+        }
+        CurrentState& operator=(const int other)
+        {
+            current_state.push(other);
+        }
+        int operator()()
+        {
+            return current_state.top();
+        }
+};
+
 class Parser
 {
     std::stack<ParserToken> parser_stack;
     std::stack<int> return_stack;
     std::stack<int> reduce_stack;
-    int current_state = 0;
+    CurrentState current_state;
 
     Action choose_action(Token lookahead_token)
     {
-        return this->choose_action(current_state, lookahead_token.type);
+        return this->choose_action(current_state(), lookahead_token.type);
     }
 
     Action choose_action(int _current_state, TOKEN lookahead_token_type)
@@ -46,7 +65,7 @@ class Parser
             catch (const std::exception& e)
             {
                 cout<<"STATE MACHINE ERROR"<<endl;
-                cout<<_current_state<<" "<<token_debug_names.at(lookahead_token_type)<<endl;
+                //cout<<_current_state<<" "<<token_debug_names.at(lookahead_token_type)<<endl;
                 throw e;
             }
         }
@@ -146,7 +165,6 @@ class Parser
 
     Library reduce_library(std::list<ParserToken>& ptokens)
     {
-        ptokens.pop_front();
         std::list<Function> func_list;
         for (std::list<ParserToken>::reverse_iterator it = ptokens.rbegin(); it != ptokens.rend(); ++it)
             func_list.push_back(Function(*it->function));
@@ -262,16 +280,16 @@ class Parser
     {
         std::stack<Expression> operator_stack;
         std::stack<Expression> output_stack;
-        auto construct_expr = [&op_opcount, &output_stack, &operator_stack]()->void
+        auto construct_expr = [&output_stack, &operator_stack]()->void
         {
-                    std::vector<Expression> constr_exprs;
-                    for (uint8_t i = 0; i < operand_count.at(op_opcount[operator_stack.top().type]); ++i)
-                    {
-                        constr_exprs.push_back(output_stack.top());
-                        output_stack.pop();
-                    }
-                    output_stack.push(Expression(operator_stack.top().type, constr_exprs));
-                    operator_stack.pop();
+            std::vector<Expression> constr_exprs;
+            for (uint8_t i = 0; i < operand_count.at(op_opcount[operator_stack.top().type]); ++i)
+            {
+                constr_exprs.push_back(output_stack.top());
+                output_stack.pop();
+            }
+            output_stack.push(Expression(operator_stack.top().type, constr_exprs));
+            operator_stack.pop();
         };
         for (auto it = exprs.begin(); it != exprs.end(); ++it)
         {
