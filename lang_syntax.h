@@ -6,7 +6,7 @@
 #include "statement.h"
 #include "expression.h"
 
-enum class ACTION {JUMP, CALL_NONTERM, SHIFT, REDUCE, CALL_NONTERM_REC, RETURN};
+enum class ACTION {CALL_NONTERM, SHIFT, REDUCE, CALL_NONTERM_REC, RETURN, ACCEPT};
 
 enum class GOAL {LIBRARY, FUNCTION, STATEMENT, EXPRESSION, NONE};
 
@@ -39,19 +39,15 @@ struct Action
     int next_state;
     int return_state;
     Goal next_goal;
-    bool load_next_token;
 
     //Action() : next_action(ACTION::JUMP), next_state(-1), return_state(-1), next_goal(Goal()), load_next_token(false) {}
     Action() {}
 
     constexpr Action(ACTION _next_action, int _next_state, int _return_state = -1)
-        : next_action(_next_action), next_state(_next_state), return_state(_return_state), load_next_token(false)  {}
+        : next_action(_next_action), next_state(_next_state), return_state(_return_state) {}
 
     constexpr Action(ACTION _next_action, Goal _next_goal = Goal(), int _return_state = -1)
-        : next_action(_next_action), next_state(-1), next_goal(_next_goal), return_state(_return_state), load_next_token(false)  {}
-
-    constexpr Action(ACTION _next_action, bool _load_next_token)
-        : next_action(_next_action), next_state(-1), return_state(-1), next_goal(Goal()), load_next_token(_load_next_token) {}
+        : next_action(_next_action), next_state(-1), next_goal(_next_goal), return_state(_return_state) {}
 };
 
 struct Current
@@ -102,6 +98,10 @@ struct CurrentHasher
 const std::unordered_map<Current, Action, CurrentHasher> grammar =
 {
     {
+        Current(-1),
+        Action(ACTION::ACCEPT)
+    },
+    {
         Current(0),
         Action(ACTION::CALL_NONTERM, 1, 93)
     },
@@ -119,15 +119,11 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(93, TOKEN_EOF),
-        Action(ACTION::REDUCE, Goal(GOAL::LIBRARY), 3)
-    },
-    {
-        Current(3),
-        Action(ACTION::RETURN, true)
+        Action(ACTION::REDUCE, Goal(GOAL::LIBRARY), 9)
     },
     {
         Current(9),
-        Action(ACTION::RETURN, false)
+        Action(ACTION::RETURN)
     },
     {
         Current(4, TOKEN_IDENTIFIER),

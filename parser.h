@@ -363,17 +363,6 @@ public:
                     current_state = action.next_state;
                     return;
 
-                // jump is for situations where we don't want to return after shifting
-                // that is: when we are pushing the last terminal in a path after
-                // which a reduce occurs (i.e: semicolon in a return statement)
-                // except if we are pushing last terminal in an expression
-                // (since expressions can recursively call themselves)
-                case ACTION::JUMP:
-                    current_state = action.next_state;  // jump to state
-                    parser_stack.push(ParserToken(lookahead_token));
-                    reduce_stack.top()++;
-                    break;
-
                 case ACTION::CALL_NONTERM:
                     current_state = action.next_state;  // get nonterminal state
                     reduce_stack.push(0);
@@ -386,14 +375,15 @@ public:
                     return_stack.push(action.return_state);
                     break;
 
+                case ACTION::ACCEPT:
+                    return;
+
                 case ACTION::RETURN:
                     current_state = return_stack.top();
                     return_stack.pop();
                     reduce_stack.pop();
                     reduce_stack.top()++;
-                    if (action.load_next_token)
-                        return;
-                    else break;
+                    break;
 
                 case ACTION::REDUCE:
                     std::list<ParserToken> to_reduce;
