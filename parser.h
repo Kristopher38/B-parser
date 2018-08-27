@@ -345,7 +345,7 @@ public:
     ~Parser()
     {}
 
-    void feed(Token lookahead_token)
+    bool feed(Token lookahead_token)
     {
         Action action;
         while (action.next_action != ACTION::SHIFT)
@@ -361,7 +361,7 @@ public:
                     parser_stack.push(ParserToken(lookahead_token));
                     reduce_stack.top()++;
                     current_state = action.next_state;
-                    return;
+                    return false;
 
                 case ACTION::CALL_NONTERM:
                     current_state = action.next_state;  // get nonterminal state
@@ -376,7 +376,7 @@ public:
                     break;
 
                 case ACTION::ACCEPT:
-                    return;
+                    return true;
 
                 case ACTION::RETURN:
                     current_state = return_stack.top();
@@ -413,6 +413,7 @@ public:
                     break;
             }
         }
+        return false;
     }
 
     Library finish()
