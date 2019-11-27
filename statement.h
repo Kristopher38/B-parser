@@ -2,7 +2,7 @@
 #define H_STATEMENT
 
 #include <memory>
-#include <list>
+#include <vector>
 
 #include "expression.h"
 #include "identifier.h"
@@ -27,14 +27,14 @@ struct Statement
 
 public:
     STATEMENT_TYPE type;
-    std::shared_ptr<std::list<Statement>> body;   // compound, conditional or loop statement
+    std::shared_ptr<std::vector<Statement>> body;   // compound, conditional or loop statement
     std::shared_ptr<Expression> expr;   // conditional, loop, return or expression statement
-    std::shared_ptr<std::list<Variable>> vars;
+    std::shared_ptr<std::vector<Variable>> vars;
 
 public:
     // Compound statement
-	Statement(std::list<Statement> _statements);
-    Statement(STATEMENT_TYPE _type, std::list<Statement> _statements);
+    Statement(std::vector<Statement> _statements);
+    Statement(STATEMENT_TYPE _type, std::vector<Statement> _statements);
 
     // Conditional or loop statement
     Statement(STATEMENT_TYPE _type, Expression _condition_expr, Statement _statement);
@@ -42,17 +42,17 @@ public:
     Statement(STATEMENT_TYPE _type, Expression _expr);
 
     // Variable definitions
-    Statement(std::list<Variable> _vars);
-    Statement(STATEMENT_TYPE _type, std::list<Variable> _vars);
+    Statement(std::vector<Variable> _vars);
+    Statement(STATEMENT_TYPE _type, std::vector<Variable> _vars);
 
     // No-op statement
     Statement();
     Statement(STATEMENT_TYPE _type);
 
-    void setbody(std::list<Statement> stmts);
+    void setbody(std::vector<Statement> stmts);
     void setbody(Statement stmt);
     void setexpr(Expression expr);
-    void setvars(std::list<Variable> vars);
+    void setvars(std::vector<Variable> vars);
 };
 
 #endif // H_STATEMENT

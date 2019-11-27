@@ -3,8 +3,9 @@
 
 #include <stack>
 #include <string>
-#include <list>
+#include <vector>
 #include <memory>
+#include <algorithm>
 
 #include "lexer.h"
 #include "token.h"
@@ -72,7 +73,7 @@ class Parser
         return a;
     }
 
-    Expression reduce_expression(EXPR_TYPE rule, std::list<ParserToken>& ptokens)
+    Expression reduce_expression(EXPR_TYPE rule, std::vector<ParserToken>& ptokens)
     {
         switch(rule)
         {
@@ -98,8 +99,8 @@ class Parser
                 Expression func_name = *ptokens.back().expression;
                 ptokens.pop_back();
                 ptokens.pop_back();
-                std::list<Expression> func_args;
-                for (std::list<ParserToken>::reverse_iterator it = ptokens.rbegin(); it != ptokens.rend(); ++it)
+                std::vector<Expression> func_args;
+                for (std::vector<ParserToken>::reverse_iterator it = ptokens.rbegin(); it != ptokens.rend(); ++it)
                     if (it->gettag() == PARSERTOKEN::EXPRESSION)
                         func_args.push_back(*it->expression);
 
@@ -149,37 +150,33 @@ class Parser
         }
     }
 
-    Function reduce_function(std::list<ParserToken>& ptokens)
+    Function reduce_function(std::vector<ParserToken>& ptokens)
     {
-        std::list<Identifier> params;
-        for (std::list<ParserToken>::reverse_iterator it = ptokens.rbegin(); it != ptokens.rend(); ++it)
+        std::vector<Identifier> params;
+        for (auto it = ptokens.rbegin() + 1; it != ptokens.rend() - 2; ++it)
             if (it->gettag() == PARSERTOKEN::TOKEN && it->token->type == TOKEN_IDENTIFIER)
                 params.push_back(*it->token->str_val);
 
-        Identifier name = params.front();
-        params.pop_front();
-        Statement body(*ptokens.front().statement);
-
-        return Function(name, params, body);
+        return Function(*ptokens.back().token->str_val, params, *ptokens.front().statement);
     }
 
-    Library reduce_library(std::list<ParserToken>& ptokens)
+    Library reduce_library(std::vector<ParserToken>& ptokens)
     {
-        std::list<Function> func_list;
-        for (std::list<ParserToken>::reverse_iterator it = ptokens.rbegin(); it != ptokens.rend(); ++it)
-            func_list.push_back(Function(*it->function));
+        std::vector<Function> func_vector;
+        for (std::vector<ParserToken>::reverse_iterator it = ptokens.rbegin(); it != ptokens.rend(); ++it)
+            func_vector.push_back(Function(*it->function));
 
-        return Library(func_list);
+        return Library(func_vector);
     }
 
-    Statement reduce_statement(STATEMENT_TYPE rule, std::list<ParserToken>& ptokens)
+    Statement reduce_statement(STATEMENT_TYPE rule, std::vector<ParserToken>& ptokens)
     {
         switch(rule)
         {
             case STATEMENT_TYPE::COMPOUND:
             {
-                std::list<Statement> stmts;
-                for (std::list<ParserToken>::reverse_iterator it = ptokens.rbegin(); it != ptokens.rend(); ++it)    // goes from left to right
+                std::vector<Statement> stmts;
+                for (std::vector<ParserToken>::reverse_iterator it = ptokens.rbegin(); it != ptokens.rend(); ++it)    // goes from left to right
                     if (it->gettag() == PARSERTOKEN::STATEMENT)
                         stmts.push_back(*it->statement);
                 return stmts;
@@ -203,8 +200,8 @@ class Parser
             case STATEMENT_TYPE::VAR_DEF:
             {
                 ptokens.pop_back();
-                std::list<Variable> vars;
-                for (std::list<ParserToken>::reverse_iterator it = ptokens.rbegin(); it != ptokens.rend(); ++it)    // goes from left to right
+                std::vector<Variable> vars;
+                for (std::vector<ParserToken>::reverse_iterator it = ptokens.rbegin(); it != ptokens.rend(); ++it)    // goes from left to right
                 {
                     if (it->gettag() == PARSERTOKEN::TOKEN && it->token->type == TOKEN_IDENTIFIER)
                     {
@@ -231,7 +228,7 @@ class Parser
         }
     }
 
-    ParserToken reduce(Goal goal, std::list<ParserToken> ptokens)   // note: order of tokens is from left to right
+    ParserToken reduce(Goal goal, std::vector<ParserToken> ptokens)   // note: order of tokens is from left to right
     {
         switch(goal.goal)
         {
@@ -248,9 +245,9 @@ class Parser
         }
     }
 
-    std::list<Expression> rpn_traverse_tree(Expression to_traverse)
+    std::vector<Expression> rpn_traverse_tree(Expression to_traverse)
     {
-        std::list<Expression> parents_list;
+        std::vector<Expression> parents_vector;
 
         // second operand of a ternary expression must be parenthesised before any further processing
         if (op_opcount[to_traverse.type] == EXPR_OPCOUNT::TERNARY)
@@ -264,19 +261,19 @@ class Parser
             // include their first child because it's another non-singletoken and
             // non-grouping expression
             if (op_opcount[to_traverse.type] != EXPR_OPCOUNT::UNARY)
-                parents_list.push_back(to_traverse.expressions->front());
-            parents_list.push_back(to_traverse);
+                parents_vector.push_back(to_traverse.expressions->front());
+            parents_vector.push_back(to_traverse);
             for (auto it = (op_opcount[to_traverse.type] != EXPR_OPCOUNT::UNARY ? ++to_traverse.expressions->begin() : to_traverse.expressions->begin()); it != to_traverse.expressions->end(); ++it)
             {
-                std::list<Expression> traversed = rpn_traverse_tree(*it);
-                parents_list.insert(parents_list.end(), traversed.begin(), traversed.end());
+                std::vector<Expression> traversed = rpn_traverse_tree(*it);
+                parents_vector.insert(parents_vector.end(), traversed.begin(), traversed.end());
             }
         }
-        else parents_list.push_back(to_traverse);
-        return parents_list;
+        else parents_vector.push_back(to_traverse);
+        return parents_vector;
     }
 
-    Expression rpn_ast(const std::list<Expression>& exprs)
+    Expression rpn_ast(const std::vector<Expression>& exprs)
     {
         std::stack<Expression> operator_stack;
         std::stack<Expression> output_stack;
@@ -386,7 +383,7 @@ public:
                     break;
 
                 case ACTION::REDUCE:
-                    std::list<ParserToken> to_reduce;
+                    std::vector<ParserToken> to_reduce;
                     for (int i = reduce_stack.top(); i > 0; --i)
                     {
                         to_reduce.push_back(parser_stack.top());

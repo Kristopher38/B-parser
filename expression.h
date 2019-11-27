@@ -2,7 +2,7 @@
 #define H_EXPRESSION
 
 #include <string>
-#include <list>
+#include <vector>
 #include <memory>
 #include <map>
 #include <vector>
@@ -31,7 +31,7 @@ struct Expression
     EXPR_OPCOUNT gentype;
     std::shared_ptr<int> int_val;
     std::shared_ptr<std::string> str_val;
-    std::shared_ptr<std::list<Expression>> expressions;
+    std::shared_ptr<std::vector<Expression>> expressions;
 
     Expression();
 
@@ -40,8 +40,8 @@ struct Expression
     Expression(EXPR_TYPE _type, std::string _str_val);
 
     // Function calls
-    Expression(Expression _func_name, std::list<Expression> _args);
-    Expression(EXPR_TYPE _type, Expression _func_name, std::list<Expression> _args);
+    Expression(Expression _func_name, std::vector<Expression> _args);
+    Expression(EXPR_TYPE _type, Expression _func_name, std::vector<Expression> _args);
 
     // Parenthesis or unary expression
     Expression(EXPR_TYPE _type, Expression _expr);

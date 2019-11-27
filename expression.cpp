@@ -93,8 +93,8 @@ Expression::Expression(EXPR_TYPE _type, std::string _str_val)
 }
 
 // Function calls
-Expression::Expression(Expression _func_name, std::list<Expression> _args) : Expression(EXPR_TYPE::FUNC_CALL, _func_name, _args) {}
-Expression::Expression(EXPR_TYPE _type, Expression _func_name, std::list<Expression> _args)
+Expression::Expression(Expression _func_name, std::vector<Expression> _args) : Expression(EXPR_TYPE::FUNC_CALL, _func_name, _args) {}
+Expression::Expression(EXPR_TYPE _type, Expression _func_name, std::vector<Expression> _args)
 {
     if (_type != EXPR_TYPE::FUNC_CALL)
         throw std::logic_error("Wrong expression type supplied with arguments as for a function call expression");
@@ -102,7 +102,7 @@ Expression::Expression(EXPR_TYPE _type, Expression _func_name, std::list<Express
     {
         type = _type;
         gentype = op_opcount[type];
-        expressions = std::make_shared<std::list<Expression>>();
+        expressions = std::make_shared<std::vector<Expression>>();
         expressions->push_back(_func_name);
         expressions->insert(expressions->end(), _args.begin(), _args.end());
     }
@@ -123,7 +123,7 @@ void Expression::init(EXPR_TYPE _type, Expression _expr)
     {
         type = _type;
         gentype = op_opcount[type];
-        expressions = std::make_shared<std::list<Expression>>();
+        expressions = std::make_shared<std::vector<Expression>>();
         expressions->push_back(_expr);
     }
 }
@@ -143,7 +143,7 @@ void Expression::init(EXPR_TYPE _type, Expression _expr1, Expression _expr2)
     {
         type = _type;
         gentype = op_opcount[type];
-        expressions = std::make_shared<std::list<Expression>>();
+        expressions = std::make_shared<std::vector<Expression>>();
         expressions->push_back(_expr1);
         expressions->push_back(_expr2);
     }
@@ -164,7 +164,7 @@ void Expression::init(EXPR_TYPE _type, Expression _condition_expr, Expression _t
     {
         type = _type;
         gentype = op_opcount[type];
-        expressions = std::make_shared<std::list<Expression>>();
+        expressions = std::make_shared<std::vector<Expression>>();
         expressions->push_back(_condition_expr);
         expressions->push_back(_true_expr);
         expressions->push_back(_false_expr);

@@ -29,10 +29,19 @@ public:
     std::shared_ptr<Token> token;
 
     ParserToken(Token _token) : tag(PARSERTOKEN::TOKEN), token(std::make_shared<Token>(_token)) {}
+    ParserToken(std::shared_ptr<Token> _token) : tag(PARSERTOKEN::TOKEN), token(_token) {}
+
     ParserToken(Statement _statement) : tag(PARSERTOKEN::STATEMENT), statement(std::make_shared<Statement>(_statement)) {}
+    ParserToken(std::shared_ptr<Statement> _statement) : tag(PARSERTOKEN::STATEMENT), statement(_statement) {}
+
     ParserToken(Expression _expression) : tag(PARSERTOKEN::EXPRESSION), expression(std::make_shared<Expression>(_expression)) {}
+    ParserToken(std::shared_ptr<Expression> _expression) : tag(PARSERTOKEN::EXPRESSION), expression(_expression) {}
+
     ParserToken(Function _function) : tag(PARSERTOKEN::FUNCTION), function(std::make_shared<Function>(_function)) {}
+    ParserToken(std::shared_ptr<Function> _function) : tag(PARSERTOKEN::FUNCTION), function(_function) {}
+
     ParserToken(Library _library) : tag(PARSERTOKEN::LIBRARY), library(std::make_shared<Library>(_library)) {}
+    ParserToken(std::shared_ptr<Library> _library) : tag(PARSERTOKEN::LIBRARY), library(_library) {}
 
     PARSERTOKEN gettag() {return tag;}
 };

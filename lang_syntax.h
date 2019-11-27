@@ -2,9 +2,11 @@
 #define LANG_SYNTAX_H_INCLUDED
 
 #include <unordered_map>
+#include <functional>
 #include "token.h"
 #include "statement.h"
 #include "expression.h"
+#include "parsertoken.h"
 
 enum class ACTION {CALL_NONTERM, SHIFT, REDUCE, CALL_NONTERM_REC, RETURN, ACCEPT};
 
@@ -18,9 +20,10 @@ struct Goal
         STATEMENT_TYPE statement;
         EXPR_TYPE expr;
     };
+    //std::function<ParserToken(std::vector<ParserToken>&)> reduce_func;
 
-    constexpr Goal(STATEMENT_TYPE _statement) : goal(GOAL::STATEMENT), statement(_statement) {}
-    constexpr Goal(EXPR_TYPE _expr) : goal(GOAL::EXPRESSION), expr(_expr) {}
+    Goal(STATEMENT_TYPE _statement) : goal(GOAL::STATEMENT), statement(_statement) {}
+    Goal(EXPR_TYPE _expr) : goal(GOAL::EXPRESSION), expr(_expr) {}
     Goal(GOAL _goal)
     {
         if (_goal == GOAL::EXPRESSION || _goal == GOAL::STATEMENT)
@@ -28,9 +31,7 @@ struct Goal
         else
             goal = _goal;
     }
-    constexpr Goal() : goal(GOAL::NONE), statement(STATEMENT_TYPE::NOP) {}
-
-
+    Goal() : goal(GOAL::NONE), statement(STATEMENT_TYPE::NOP) {}
 };
 
 struct Action
@@ -43,10 +44,10 @@ struct Action
     //Action() : next_action(ACTION::JUMP), next_state(-1), return_state(-1), next_goal(Goal()), load_next_token(false) {}
     Action() {}
 
-    constexpr Action(ACTION _next_action, int _next_state, int _return_state = -1)
+    Action(ACTION _next_action, int _next_state, int _return_state = -1)
         : next_action(_next_action), next_state(_next_state), return_state(_return_state) {}
 
-    constexpr Action(ACTION _next_action, Goal _next_goal = Goal(), int _return_state = -1)
+    Action(ACTION _next_action, Goal _next_goal = Goal(), int _return_state = -1)
         : next_action(_next_action), next_state(-1), next_goal(_next_goal), return_state(_return_state) {}
 };
 

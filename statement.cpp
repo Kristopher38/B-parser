@@ -1,15 +1,15 @@
 #include "statement.h"
 
 // Compound statement
-Statement::Statement(std::list<Statement> _statements) : Statement(STATEMENT_TYPE::COMPOUND, _statements) {}
-Statement::Statement(STATEMENT_TYPE _type, std::list<Statement> _statements)
+Statement::Statement(std::vector<Statement> _statements) : Statement(STATEMENT_TYPE::COMPOUND, _statements) {}
+Statement::Statement(STATEMENT_TYPE _type, std::vector<Statement> _statements)
 {
     if (_type != STATEMENT_TYPE::COMPOUND)
-        throw std::logic_error("Wrong statement type supplied with statement list");
+        throw std::logic_error("Wrong statement type supplied with statement vector");
     else
     {
         type = _type;
-        body = std::make_shared<std::list<Statement>>(_statements);
+        body = std::make_shared<std::vector<Statement>>(_statements);
     }
 }
 
@@ -21,7 +21,7 @@ Statement::Statement(STATEMENT_TYPE _type, Expression _condition_expr, Statement
     else
     {
         type = _type;
-        body = std::make_shared<std::list<Statement>>();
+        body = std::make_shared<std::vector<Statement>>();
         body->push_back(_statement);
         expr = std::make_shared<Expression>(_condition_expr);
     }
@@ -41,15 +41,15 @@ Statement::Statement(STATEMENT_TYPE _type, Expression _expr)
 
 // Variable definitions
 
-Statement::Statement(std::list<Variable> _vars) : Statement(STATEMENT_TYPE::VAR_DEF, _vars) {}
-Statement::Statement(STATEMENT_TYPE _type, std::list<Variable> _vars)
+Statement::Statement(std::vector<Variable> _vars) : Statement(STATEMENT_TYPE::VAR_DEF, _vars) {}
+Statement::Statement(STATEMENT_TYPE _type, std::vector<Variable> _vars)
 {
     if (_type != STATEMENT_TYPE::VAR_DEF)
-        throw std::logic_error("Wrong statement type supplied with variable list");
+        throw std::logic_error("Wrong statement type supplied with variable vector");
     else
     {
         type = _type;
-        vars = std::make_shared<std::list<Variable>>(_vars);
+        vars = std::make_shared<std::vector<Variable>>(_vars);
     }
 }
 
@@ -63,9 +63,9 @@ Statement::Statement(STATEMENT_TYPE _type)
         type = _type;
 }
 
-void Statement::setbody(std::list<Statement> _stmts)
+void Statement::setbody(std::vector<Statement> _stmts)
 {
-    body = std::make_shared<std::list<Statement>>(_stmts);
+    body = std::make_shared<std::vector<Statement>>(_stmts);
 }
 
 void Statement::setbody(Statement _stmt)
@@ -79,7 +79,7 @@ void Statement::setexpr(Expression _expr)
     expr = std::make_shared<Expression>(_expr);
 }
 
-void Statement::setvars(std::list<Variable> _vars)
+void Statement::setvars(std::vector<Variable> _vars)
 {
-    vars = std::make_shared<std::list<Variable>>(_vars);
+    vars = std::make_shared<std::vector<Variable>>(_vars);
 }
