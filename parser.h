@@ -163,8 +163,11 @@ class Parser
     Library reduce_library(std::vector<ParserToken>& ptokens)
     {
         std::vector<Function> func_vector;
-        for (std::vector<ParserToken>::reverse_iterator it = ptokens.rbegin(); it != ptokens.rend(); ++it)
-            func_vector.push_back(Function(*it->function));
+        std::transform(ptokens.rbegin(), ptokens.rend(), std::back_inserter(func_vector), [](ParserToken ptoken) {
+           return *ptoken.function;
+        });
+        //for (auto it = ptokens.rbegin(); it != ptokens.rend(); ++it)
+        //        func_vector.push_back(Function(*it->function));
 
         return Library(func_vector);
     }

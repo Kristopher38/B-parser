@@ -7,6 +7,9 @@
 #include "statement.h"
 #include "expression.h"
 #include "parsertoken.h"
+#include "library.h"
+#include "function.h"
+#include "reducer.h"
 
 enum class ACTION {CALL_NONTERM, SHIFT, REDUCE, CALL_NONTERM_REC, RETURN, ACCEPT};
 
@@ -15,23 +18,10 @@ enum class GOAL {LIBRARY, FUNCTION, STATEMENT, EXPRESSION, NONE};
 struct Goal
 {
     GOAL goal;
-    union
-    {
-        STATEMENT_TYPE statement;
-        EXPR_TYPE expr;
-    };
-    //std::function<ParserToken(std::vector<ParserToken>&)> reduce_func;
+    std::function<ParserToken(std::vector<ParserToken>&)> reduce_func;
 
-    Goal(STATEMENT_TYPE _statement) : goal(GOAL::STATEMENT), statement(_statement) {}
-    Goal(EXPR_TYPE _expr) : goal(GOAL::EXPRESSION), expr(_expr) {}
-    Goal(GOAL _goal)
-    {
-        if (_goal == GOAL::EXPRESSION || _goal == GOAL::STATEMENT)
-            throw std::logic_error("No statement or expression type supplied for goal");
-        else
-            goal = _goal;
-    }
-    Goal() : goal(GOAL::NONE), statement(STATEMENT_TYPE::NOP) {}
+    Goal(GOAL _goal, std::function<ParserToken(std::vector<ParserToken>&)> _reduce_func) : goal(_goal), reduce_func(_reduce_func) {}
+    Goal() : goal(GOAL::NONE) {}
 };
 
 struct Action
@@ -120,7 +110,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(93, TOKEN_EOF),
-        Action(ACTION::REDUCE, Goal(GOAL::LIBRARY), 9)
+        Action(ACTION::REDUCE, Goal(GOAL::LIBRARY, Reducer::library), 9)
     },
     {
         Current(9),
@@ -152,7 +142,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(94),
-        Action(ACTION::REDUCE, Goal(GOAL::FUNCTION), 9)
+        Action(ACTION::REDUCE, Goal(GOAL::FUNCTION, Reducer::function), 9)
     },
     {
         Current(8, TOKEN_CURLYBRACE_OPEN),
@@ -200,7 +190,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(12),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::COMPOUND), 9)
+        Action(ACTION::REDUCE, Goal(GOAL::STATEMENT, Reducer::nop), 9)
     },
     {
         Current(13, TOKEN_PARENTHESIS_OPEN),
@@ -220,7 +210,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(17),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::CONDITIONAL), 9)
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::CONDITIONAL, Reducer::nop), 9)
     },
     {
         Current(18, TOKEN_PARENTHESIS_OPEN),
@@ -240,7 +230,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(22),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::LOOP), 9)
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::LOOP, Reducer::nop), 9)
     },
     {
         Current(23),
@@ -252,7 +242,7 @@ const std::unordered_map<Current, Action, CurrentHasher> grammar =
     },
     {
         Current(25),
-        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::RETURN), 9)
+        Action(ACTION::REDUCE, Goal(STATEMENT_TYPE::RETURN, Reducer::nop), 9)
     },
     {
         Current(26, TOKEN_IDENTIFIER),
